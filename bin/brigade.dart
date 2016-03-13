@@ -93,12 +93,12 @@ main(List<String> args) async {
         var samples = await crosstool.listSamples();
 
         if (samples.contains(sampleName)) {
-          var location = await crosstool.getToolchain(sampleName, install: true);
+          var prefix = await crosstool.getToolchain(sampleName, install: true);
           await writeToolchainFile(generateNormalCMakeToolchain(
             null,
             targetName,
-            "${location}-cc",
-            "${location}-c++"
+            "${prefix}cc",
+            "${prefix}c++"
           ));
         } else {
           reportStatusMessage("Skipping build for ${targetName}");
