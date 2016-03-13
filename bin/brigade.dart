@@ -47,17 +47,31 @@ main(List<String> args) async {
     if (toolchainConfig.containsKey(targetName)) {
       var toolchainDef = toolchainConfig[targetName];
 
-      var system = toolchainDef["system"];
-      var path = toolchainDef["path"];
+      String system = toolchainDef["system"];
+      String prefix = toolchainDef["prefix"];
+
+      if (prefix == null) {
+        prefix = "/usr/bin";
+      }
 
       if (toolchainDef["defs"] is Map) {
         config.defs.addAll(toolchainDef["defs"]);
       }
 
+      if (!prefix.endsWith("-") && !prefix.endsWith("/")) {
+        prefix += "/";
+      }
+
       await writeToolchainFile(
-        generateNormalCMakeToolchain(system, targetName, path)
+        generateNormalCMakeToolchain(
+          system,
+          targetName,
+          "${prefix}cc",
+          "${prefix}c++"
+        )
       );
-    } else if (targetName == LOCAL) {
+    } else if (targetName == LOCAL &&
+      Platform.environment["LEGION_IGNORE_LOCAL"] != "false") {
       var localToolchainPath = Platform.environment["LEGION_LOCAL_TOOLCHAIN"];
 
       if (localToolchainPath == null) {
@@ -65,7 +79,12 @@ main(List<String> args) async {
       }
 
       await writeToolchainFile(
-        generateNormalCMakeToolchain(null, targetName, localToolchainPath)
+        generateNormalCMakeToolchain(
+          null,
+          targetName,
+          "${localToolchainPath}/bin/cc",
+          "${localToolchainPath}/bin/c++"
+        )
       );
     } else {
       var tryClang = await isClangInstalled();
