@@ -58,7 +58,21 @@ reportStatusMessage(String message) {
 }
 
 reportErrorMessage(String message) {
-  print("${red(Icon.WARNING_SIGN)}  ${_boldWhite(message.trim())}");
+  var lines = message.trim().split("\n");
+  var out = "${red(Icon.WARNING_SIGN)}  ";
+
+  int i = 0;
+  for (String line in lines) {
+    if (i == 0) {
+      out += _boldWhite(line);
+    } else {
+      out += line;
+    }
+    out += "\n";
+    i++;
+  }
+
+  print(out.trim());
 }
 
 class GlobalState {
@@ -87,16 +101,50 @@ Future<Map<String, String>> getTargetConfig() async {
   }
 }
 
-Future<dynamic> readJsonFile(String path) async {
+String resolveWorkingPath(String path, {from}) {
+  if (from != null) {
+    if (from is Directory) {
+      from = from.path;
+    } else if (from is! String) {
+      from = from.toString();
+    }
+  } else {
+    from = Directory.current.path;
+  }
+
+  return pathlib.join(from, path);
+}
+
+Future<dynamic> readJsonFile(String path, {inside, defaultValue}) async {
   path = path.replaceAll("{LEGION}", getLegionHome());
+
+  if (inside != null) {
+    if (inside is Directory) {
+      inside = inside.path;
+    } else if (inside is! String) {
+      inside = inside.toString();
+    }
+
+    path = pathlib.join(inside, path);
+  }
 
   var file = new File(path);
 
   if (await file.exists()) {
     return JSON.decode(await file.readAsString());
   } else {
-    return {};
+    return defaultValue;
   }
+}
+
+Future writeJsonFile(String path, data) async {
+  var file = new File(path);
+  if (!(await file.exists())) {
+    await file.create(recursive: true);
+  }
+  await file.writeAsString(const JsonEncoder.withIndent("  ").convert(
+    data
+  ) + "\n");
 }
 
 String getLocalArch() {
@@ -117,4 +165,37 @@ String getLocalOperatingSystem() {
   }
 
   return os;
+}
+
+Future<String> findExecutable(String name) async {
+  var paths = Platform.environment["PATH"].split(
+    Platform.isWindows ? ";" : ":"
+  );
+  var tryFiles = [name];
+
+  if (Platform.isWindows) {
+    tryFiles.addAll(["${name}.exe", "${name}.bat"]);
+  }
+
+  for (var p in paths) {
+    if (Platform.environment.containsKey("HOME")) {
+      p = p.replaceAll("~/", Platform.environment["HOME"]);
+    }
+
+    var dir = new Directory(pathlib.normalize(p));
+
+    if (!(await dir.exists())) {
+      continue;
+    }
+
+    for (var t in tryFiles) {
+      var file = new File("${dir.path}/${t}");
+
+      if (await file.exists()) {
+        return file.path;
+      }
+    }
+  }
+
+  return null;
 }

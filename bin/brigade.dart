@@ -1,4 +1,6 @@
 import "package:legion/crosstool.dart";
+import "package:legion/cmake.dart";
+import "package:legion/clang.dart";
 import "package:legion/utils.dart";
 
 import "package:legit/io.dart";
@@ -9,71 +11,132 @@ final String LOCAL = "${getLocalOperatingSystem()}-${getLocalArch()}";
 
 main(List<String> args) async {
   var toolchainConfig = await getTargetConfig();
-  var config = await readJsonFile("legion.json");
+  var legionConfig = await readJsonFile("legion.json", defaultValue: {});
   var crosstool = new CrossTool();
+  var legionDir = new Directory("legion");
 
-  List targets = config["targets"];
-
-  if (targets == null) {
-    targets = [];
+  if (await legionDir.exists()) {
+    await legionDir.delete(recursive: true);
   }
 
-  targets.addAll(args);
+  await legionDir.create(recursive: true);
 
-  Map toolchainStandard = {
-    "${LOCAL}": "/usr/bin"
-  };
+  List targetsToGenerate = legionConfig["targets"];
 
-  Map toolchains = {};
+  if (targetsToGenerate == null) {
+    targetsToGenerate = [];
+  }
 
-  for (String name in targets) {
-    if (toolchainConfig.containsKey(name)) {
-      toolchains[name] = toolchainConfig[name];
-    } else if (toolchainStandard.containsKey(name)) {
-      toolchains[name] = toolchainStandard[name];
-    } else {
-      if (CROSSTOOL_TARGET_MAP.containsKey(name)) {
-        name = CROSSTOOL_TARGET_MAP[name];
+  targetsToGenerate.addAll(args);
+
+  List<TargetConfig> configs = <TargetConfig>[];
+
+  for (String targetName in targetsToGenerate.toList()) {
+    File toolchainCMakeFile = new File("legion/.toolchains/${targetName}.cmake");
+    TargetConfig config = new TargetConfig(targetName);
+
+    writeToolchainFile(String content) async {
+      if (await toolchainCMakeFile.exists()) {
+        await toolchainCMakeFile.delete();
       }
 
-      await crosstool.bootstrap();
-      var samples = await crosstool.listSamples();
+      await toolchainCMakeFile.create(recursive: true);
+      await toolchainCMakeFile.writeAsString(content);
+    }
 
-      if (samples.contains(name)) {
-        toolchains[name] = await crosstool.getToolchain(name, install: true);
+    if (toolchainConfig.containsKey(targetName)) {
+      var toolchainDef = toolchainConfig[targetName];
+
+      var system = toolchainDef["system"];
+      var path = toolchainDef["path"];
+
+      await writeToolchainFile(
+        generateNormalCMakeToolchain(system, targetName, path)
+      );
+    } else {
+      var tryClang = await isClangInstalled();
+
+      if (Platform.environment["LEGION_IGNORE_CLANG"] == "true") {
+        tryClang = false;
+      }
+
+      if (legionConfig["clang"] == false) {
+        tryClang = false;
+      }
+
+      if (tryClang && clangTargetMap.containsKey(targetName)) {
+        await writeToolchainFile(generateClangCMakeToolchain(
+          null,
+          targetName
+        ));
       } else {
-        reportStatusMessage("Skipping build for ${name}");
+        String sampleName = targetName;
+        if (CROSSTOOL_TARGET_MAP.containsKey(targetName)) {
+          sampleName = CROSSTOOL_TARGET_MAP[targetName];
+        }
+
+        await crosstool.bootstrap();
+        var samples = await crosstool.listSamples();
+
+        if (samples.contains(sampleName)) {
+          var location = await crosstool.getToolchain(sampleName, install: true);
+          await writeToolchainFile(generateNormalCMakeToolchain(
+            null,
+            targetName,
+            location
+          ));
+        } else {
+          reportStatusMessage("Skipping build for ${targetName}");
+          targetsToGenerate.remove(targetName);
+          continue;
+        }
       }
     }
+
+    config.toolchainFilePath = toolchainCMakeFile.path;
+
+    configs.add(config);
   }
 
-  for (String name in toolchains.keys) {
-    reportStatusMessage("Generating build for ${name}");
+  for (TargetConfig config in configs) {
+    reportStatusMessage("Generating build for ${config.targetName}");
 
-    var toolchain = toolchains[name];
-    var dir = new Directory("legion/${name}");
+    var dir = new Directory("legion/${config.targetName}");
 
     if (await dir.exists()) {
       await dir.create(recursive: true);
     }
     await dir.create(recursive: true);
 
-    var extraArgs = config["args"];
-    var cmakeArgs = extraArgs == null ? [] : extraArgs["cmake"];
+    var extraArgs = legionConfig["args"];
+    List<String> cmakeArgs = extraArgs == null ? [] : extraArgs["cmake"];
+
+    if (Platform.environment["LEGION_CMAKE_ARGS"] is String) {
+      cmakeArgs.addAll(Platform.environment["LEGION_CMAKE_ARGS"].split(" "));
+    }
+
+    cmakeArgs.add("../..");
+
+    var inherit = Platform.environment["LEGION_VERBOSE"] == "true";
+
+    if (legionConfig["verbose"] == true) {
+      inherit = true;
+    }
 
     var result = await executeCommand(
       "cmake",
-      args: []..addAll(cmakeArgs)..add("../.."),
+      args: config.generateArguments(cmakeArgs),
       workingDirectory: dir.path,
-      environment: {
-        "CMAKE_C_COMPILER": "${toolchain}/bin/cc",
-        "CMAKE_CXX_COMPILER": "${toolchain}/bin/c++"
-      },
-      writeToBuffer: true
+      writeToBuffer: true,
+      inherit: inherit
     );
 
     if (result.exitCode != 0) {
-      reportErrorMessage("CMake Failed\n${result.output}");
+      reportErrorMessage(
+        "CMake Failed for target"
+        " ${config.targetName}\n${result.output}");
     }
   }
+
+  await writeJsonFile("legion/.targets", targetsToGenerate);
 }

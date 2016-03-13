@@ -14,7 +14,6 @@ const String _GIT_URL = "https://github.com/crosstool-ng/crosstool-ng.git";
 const Map<String, String> CROSSTOOL_TARGET_MAP = const {
   "linux-x64": "x86_64-unknown-linux-gnu",
   "windows-x64": "x86_64-w64-mingw32",
-  "windows-x86": "i686-w64-mingw32",
   "linux-arm": "arm-unknown-eabi",
   "linux-arm-rpi1": "armv6-rpi-linux-gnueabi",
   "linux-arm-rpi2": "armv7-rpi2-linux-gnueabihf",

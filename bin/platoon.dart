@@ -4,19 +4,37 @@ import "package:legit/io.dart";
 import "package:legion/utils.dart";
 
 main(List<String> args) async {
-  var dir = new Directory("legion");
+  Directory dir = new Directory("legion");
+  List<String> targets = await readJsonFile(
+    ".targets",
+    inside: dir,
+    defaultValue: null
+  );
 
-  List<Directory> dirs = await dir
-    .list()
-    .where((entity) => entity is Directory)
-    .toList();
+  if (targets == null) {
+    reportErrorMessage("No targets have been generated");
+    exit(1);
+  }
 
-  for (Directory sdir in dirs) {
+  var command = "/usr/bin/make";
+
+  if (args.isNotEmpty) {
+    command += " ";
+    command += args.join(" ");
+  }
+
+  var scriptArgs = ["-qfc", command, "/dev/null"];
+
+  if (Platform.isMacOS) {
+    scriptArgs = ["-q", "/dev/null", "make"]..addAll(args);
+  }
+
+  for (String target in targets) {
     var result = await executeCommand(
-      "make",
-      args: args,
+      "script",
+      args: scriptArgs,
       inherit: true,
-      workingDirectory: sdir.path
+      workingDirectory: resolveWorkingPath(target, from: dir)
     );
 
     if (result.exitCode != 0) {
