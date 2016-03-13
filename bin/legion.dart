@@ -16,6 +16,17 @@ main(List<String> args) async {
     return await Brigade.main(argv);
   } else if (cmd == "platoon" || cmd == "build") {
     return await Platoon.main(argv);
+  } else if (cmd == "quick") {
+    await Brigade.main(argv);
+
+    var platoonArgString = Platform.environment["LEGION_BUILD_ARGS"];
+    var platoonArgs = <String>[];
+
+    if (platoonArgString is String) {
+      platoonArgs.addAll(platoonArgString.split(" "));
+    }
+
+    await Platoon.main(platoonArgs);
   } else {
     print("Unknown Command: ${cmd}");
     exit(1);
