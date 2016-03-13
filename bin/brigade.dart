@@ -62,12 +62,18 @@ main(List<String> args) async {
         prefix += "/";
       }
 
+      String gnu = "g";
+
+      if (toolchainDef["gnu"] == false) {
+        gnu = "";
+      }
+
       await writeToolchainFile(
         generateNormalCMakeToolchain(
           system,
           targetName,
-          "${prefix}cc",
-          "${prefix}c++"
+          "${prefix}${gnu}cc",
+          "${prefix}${gnu}c++"
         )
       );
     } else if (targetName == LOCAL &&
@@ -82,8 +88,8 @@ main(List<String> args) async {
         generateNormalCMakeToolchain(
           null,
           targetName,
-          "${localToolchainPath}/bin/cc",
-          "${localToolchainPath}/bin/c++"
+          "${localToolchainPath}/bin/gcc",
+          "${localToolchainPath}/bin/g++"
         )
       );
     } else {
