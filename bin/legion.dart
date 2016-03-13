@@ -16,7 +16,7 @@ main(List<String> args) async {
     return await Brigade.main(argv);
   } else if (cmd == "platoon" || cmd == "build" || cmd == "make") {
     return await Platoon.main(argv);
-  } else if (cmd == "quick") {
+  } else if (cmd == "quick" || cmd == "qbuild" || cmd == "war") {
     await Brigade.main(argv);
 
     var platoonArgString = Platform.environment["LEGION_BUILD_ARGS"];
