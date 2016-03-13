@@ -206,13 +206,13 @@ class CrossTool {
   Future<String> getToolchain(String name, {bool install: false}) async {
     var dir = new Directory(pathlib.join(getToolchainHome(), name));
     if (await dir.exists()) {
-      return dir.absolute.path;
+      return pathlib.join(getToolchainHome(), "bin", "${name}-");
     } else {
       if (install) {
         await bootstrap();
         await chooseSample(name);
         await build();
-        return dir.absolute.path;
+        return pathlib.join(getToolchainHome(), "bin", "${name}-");
       } else {
         reportErrorMessage("Toolchain ${name} not found");
         exit(1);

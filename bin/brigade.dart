@@ -50,6 +50,10 @@ main(List<String> args) async {
       var system = toolchainDef["system"];
       var path = toolchainDef["path"];
 
+      if (toolchainDef["defs"] is Map) {
+        config.defs.addAll(toolchainDef["defs"]);
+      }
+
       await writeToolchainFile(
         generateNormalCMakeToolchain(system, targetName, path)
       );
@@ -93,7 +97,8 @@ main(List<String> args) async {
           await writeToolchainFile(generateNormalCMakeToolchain(
             null,
             targetName,
-            location
+            "${location}-cc",
+            "${location}-c++"
           ));
         } else {
           reportStatusMessage("Skipping build for ${targetName}");

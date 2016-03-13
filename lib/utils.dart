@@ -87,8 +87,8 @@ _boldCyan(String message) {
   return (new ANSI.AnsiPen()..cyan(bold: true))(message);
 }
 
-Future<Map<String, String>> getTargetConfig() async {
-  var file = getLegionHomeFile("toolchains.json");
+Future<Map<String, Map<String, dynamic>>> getTargetConfig() async {
+  var file = getLegionHomeFile("targets.json");
 
   if (await file.exists()) {
     var content = await file.readAsString();

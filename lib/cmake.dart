@@ -58,8 +58,8 @@ String generateClangCMakeToolchain(String system, String target) {
 String generateNormalCMakeToolchain(
   String system,
   String target,
-  String toolchain
-  ) {
+  String cc,
+  String cpp) {
   if (system == null) {
     system = getCMakeSystemName(target);
   }
@@ -67,8 +67,8 @@ String generateNormalCMakeToolchain(
   var out = _templateCMakeToolchainNormal;
 
   out = out.replaceAll("{SYS}", system);
-  out = out.replaceAll("{CC}", "${toolchain}/bin/cc");
-  out = out.replaceAll("{CXX}", "${toolchain}/bin/c++");
+  out = out.replaceAll("{CC}", cc);
+  out = out.replaceAll("{CXX}", cpp);
 
   return out;
 }
