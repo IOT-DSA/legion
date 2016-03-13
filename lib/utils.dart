@@ -199,3 +199,24 @@ Future<String> findExecutable(String name) async {
 
   return null;
 }
+
+bool getBooleanSetting(String name, [config]) {
+  var env = "LEGION_" + name.replaceAll(".", "_").toUpperCase();
+
+  if (const [
+    "yes",
+    "y",
+    "1",
+    "true",
+    "ON",
+    "on"
+  ].contains(Platform.environment[env])) {
+    return true;
+  }
+
+  if (config != null && config[name] == true) {
+    return true;
+  }
+
+  return false;
+}

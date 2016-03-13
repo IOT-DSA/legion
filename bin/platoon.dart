@@ -5,31 +5,50 @@ import "package:legion/utils.dart";
 
 main(List<String> args) async {
   Directory dir = new Directory("legion");
-  List<String> targets = await readJsonFile(
-    ".targets",
+  Map<String, dynamic> state = await readJsonFile(
+    ".state",
     inside: dir,
     defaultValue: null
   );
 
-  if (targets == null) {
+  if (state == null) {
     reportErrorMessage("No targets have been generated");
     exit(1);
   }
 
-  var command = "/usr/bin/make";
+  List<String> targets = state["targets"];
 
-  if (args.isNotEmpty) {
-    command += " ";
-    command += args.join(" ");
+  if (targets == null) {
+    reportErrorMessage("Bad state, targets are missing.");
+    exit(1);
   }
 
-  var scriptArgs = ["-qfc", command, "/dev/null"];
+  String command = const {
+    "Unix Makefiles": "make",
+    "Xcode": "xcodebuild",
+    "Ninja": "ninja"
+  }[state["generator"]];
+
+  if (command == null) {
+    command = "make";
+  }
+
+  var scriptArgs = [];
 
   if (Platform.isMacOS) {
-    scriptArgs = ["-q", "/dev/null", "make"]..addAll(args);
+    scriptArgs = ["-q", "/dev/null", command]..addAll(args);
+  } else {
+    if (args.isNotEmpty) {
+      command += " ";
+      command += args.join(" ");
+    }
+
+    scriptArgs = ["-qfc", command, "/dev/null"];
   }
 
   for (String target in targets) {
+    reportStatusMessage("Building target ${target}");
+
     var result = await executeCommand(
       "script",
       args: scriptArgs,
@@ -38,7 +57,10 @@ main(List<String> args) async {
     );
 
     if (result.exitCode != 0) {
+      reportErrorMessage("Failed to build target ${target}");
       exit(result.exitCode);
     }
+
+    reportStatusMessage("Built target ${target}");
   }
 }

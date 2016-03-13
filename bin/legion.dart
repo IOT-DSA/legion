@@ -14,7 +14,7 @@ main(List<String> args) async {
 
   if (cmd == "brigade" || cmd == "generate") {
     return await Brigade.main(argv);
-  } else if (cmd == "platoon" || cmd == "build") {
+  } else if (cmd == "platoon" || cmd == "build" || cmd == "make") {
     return await Platoon.main(argv);
   } else if (cmd == "quick") {
     await Brigade.main(argv);

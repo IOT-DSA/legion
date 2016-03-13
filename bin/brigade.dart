@@ -10,10 +10,12 @@ import "dart:io";
 final String LOCAL = "${getLocalOperatingSystem()}-${getLocalArch()}";
 
 main(List<String> args) async {
+  var hasError = false;
   var toolchainConfig = await getTargetConfig();
   var legionConfig = await readJsonFile("legion.json", defaultValue: {});
   var crosstool = new CrossTool();
   var legionDir = new Directory("legion");
+  var state = {};
 
   if (await legionDir.exists()) {
     await legionDir.delete(recursive: true);
@@ -77,7 +79,7 @@ main(List<String> args) async {
         )
       );
     } else if (targetName == LOCAL &&
-      Platform.environment["LEGION_IGNORE_LOCAL"] != "false") {
+      !getBooleanSetting("ignore.local", legionConfig)) {
       var localToolchainPath = Platform.environment["LEGION_LOCAL_TOOLCHAIN"];
 
       if (localToolchainPath == null) {
@@ -95,7 +97,7 @@ main(List<String> args) async {
     } else {
       var tryClang = await isClangInstalled();
 
-      if (Platform.environment["LEGION_IGNORE_CLANG"] == "true") {
+      if (getBooleanSetting("ignore.clang", legionConfig)) {
         tryClang = false;
       }
 
@@ -138,8 +140,14 @@ main(List<String> args) async {
     configs.add(config);
   }
 
+  String generatorName = legionConfig["generator"];
+
+  if (generatorName == null) {
+    generatorName = "Unix Makefiles";
+  }
+
   for (TargetConfig config in configs) {
-    reportStatusMessage("Generating build for ${config.targetName}");
+    reportStatusMessage("Generating target ${config.targetName}");
 
     var dir = new Directory("legion/${config.targetName}");
 
@@ -157,11 +165,15 @@ main(List<String> args) async {
 
     cmakeArgs.add("../..");
 
-    var inherit = Platform.environment["LEGION_VERBOSE"] == "true";
+    var inherit = getBooleanSetting("brigade.verbose", legionConfig);
 
     if (legionConfig["verbose"] == true) {
       inherit = true;
     }
+
+    cmakeArgs.addAll(["-G", generatorName]);
+
+    cmakeArgs = config.generateArguments(cmakeArgs);
 
     var result = await executeCommand(
       "cmake",
@@ -175,8 +187,21 @@ main(List<String> args) async {
       reportErrorMessage(
         "CMake Failed for target"
         " ${config.targetName}\n${result.output}");
+      hasError = true;
+      targetsToGenerate.remove(config.targetName);
+    } else {
+      reportStatusMessage("Generated target ${config.targetName}");
     }
   }
 
-  await writeJsonFile("legion/.targets", targetsToGenerate);
+  state.addAll({
+    "targets": targetsToGenerate,
+    "generator": generatorName
+  });
+
+  await writeJsonFile("legion/.state", state);
+
+  if (hasError) {
+    exit(1);
+  }
 }
