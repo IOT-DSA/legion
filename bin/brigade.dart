@@ -53,6 +53,16 @@ main(List<String> args) async {
       await writeToolchainFile(
         generateNormalCMakeToolchain(system, targetName, path)
       );
+    } else if (targetName == LOCAL) {
+      var localToolchainPath = Platform.environment["LEGION_LOCAL_TOOLCHAIN"];
+
+      if (localToolchainPath == null) {
+        localToolchainPath = "/usr";
+      }
+
+      await writeToolchainFile(
+        generateNormalCMakeToolchain(null, targetName, localToolchainPath)
+      );
     } else {
       var tryClang = await isClangInstalled();
 
