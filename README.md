@@ -14,8 +14,7 @@ pub global activate -sgit https://github.com/IOT-DSA/legion.git
 
 ```bash
 cd path/to/cmake/project
-legion generate linux-x64 linux-arm
-legion build
+legion quick linux-x64 linux-arm
 ```
 
 For each target, a CMake build directory is created in `legion/${target}`.
