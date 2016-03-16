@@ -8,6 +8,7 @@ import "package:legit/io.dart";
 import "dart:io";
 
 final String LOCAL = "${getLocalOperatingSystem()}-${getLocalArch()}";
+final String LOCAL_32BIT = "${getLocalOperatingSystem()}-x86";
 
 main(List<String> args) async {
   var hasError = false;
@@ -15,7 +16,9 @@ main(List<String> args) async {
   var legionConfig = await readJsonFile("legion.json", defaultValue: {});
   var crosstool = new CrossTool();
   var legionDir = new Directory("legion");
-  var state = {};
+  var state = {
+    "cmake": {}
+  };
 
   if (await legionDir.exists()) {
     await legionDir.delete(recursive: true);
@@ -34,17 +37,7 @@ main(List<String> args) async {
   List<TargetConfig> configs = <TargetConfig>[];
 
   for (String targetName in targetsToGenerate.toList()) {
-    File toolchainCMakeFile = new File("legion/.toolchains/${targetName}.cmake");
     TargetConfig config = new TargetConfig(targetName);
-
-    writeToolchainFile(String content) async {
-      if (await toolchainCMakeFile.exists()) {
-        await toolchainCMakeFile.delete();
-      }
-
-      await toolchainCMakeFile.create(recursive: true);
-      await toolchainCMakeFile.writeAsString(content);
-    }
 
     if (toolchainConfig.containsKey(targetName)) {
       var toolchainDef = toolchainConfig[targetName];
@@ -70,7 +63,7 @@ main(List<String> args) async {
         gnu = "";
       }
 
-      await writeToolchainFile(
+      config.addToolchainDefs(
         generateNormalCMakeToolchain(
           system,
           targetName,
@@ -78,22 +71,29 @@ main(List<String> args) async {
           "${prefix}${gnu}c++"
         )
       );
-    } else if (targetName == LOCAL &&
-      !getBooleanSetting("ignore.local", legionConfig)) {
+    } else if ((
+      targetName == LOCAL ||
+        (targetName == LOCAL_32BIT && LOCAL.endsWith("-x64"))
+    ) && !getBooleanSetting("ignore.local", legionConfig)) {
       var localToolchainPath = Platform.environment["LEGION_LOCAL_TOOLCHAIN"];
 
       if (localToolchainPath == null) {
         localToolchainPath = "/usr";
       }
 
-      await writeToolchainFile(
-        generateNormalCMakeToolchain(
-          null,
-          targetName,
-          "${localToolchainPath}/bin/gcc",
-          "${localToolchainPath}/bin/g++"
-        )
-      );
+      config.addToolchainDefs(generateNormalCMakeToolchain(
+        null,
+        targetName,
+        "${localToolchainPath}/bin/gcc",
+        "${localToolchainPath}/bin/g++"
+      ));
+
+      if (targetName == LOCAL_32BIT) {
+        config.defs.addAll({
+          "CMAKE_C_FLAGS": "-m32",
+          "CMAKE_CXX_FLAGS": "-m32"
+        });
+      }
     } else {
       var tryClang = await isClangInstalled();
 
@@ -106,7 +106,7 @@ main(List<String> args) async {
       }
 
       if (tryClang && clangTargetMap.containsKey(targetName)) {
-        await writeToolchainFile(generateClangCMakeToolchain(
+        config.addToolchainDefs(generateClangCMakeToolchain(
           null,
           targetName
         ));
@@ -121,7 +121,7 @@ main(List<String> args) async {
 
         if (samples.contains(sampleName)) {
           var prefix = await crosstool.getToolchain(sampleName, install: true);
-          await writeToolchainFile(generateNormalCMakeToolchain(
+          config.addToolchainDefs(generateNormalCMakeToolchain(
             null,
             targetName,
             "${prefix}cc",
@@ -135,7 +135,7 @@ main(List<String> args) async {
       }
     }
 
-    config.toolchainFilePath = toolchainCMakeFile.path;
+    await config.configure();
 
     configs.add(config);
   }
@@ -175,9 +175,13 @@ main(List<String> args) async {
 
     cmakeArgs = config.generateArguments(cmakeArgs);
 
+    state["cmake"][config.targetName] = {
+      "args": cmakeArgs
+    };
+
     var result = await executeCommand(
       "cmake",
-      args: config.generateArguments(cmakeArgs),
+      args: cmakeArgs,
       workingDirectory: dir.path,
       writeToBuffer: true,
       inherit: inherit

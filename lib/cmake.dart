@@ -1,30 +1,9 @@
 library legion.cmake;
 
+import "dart:async";
+import "dart:io";
+
 import "clang.dart";
-
-const String _templateCMakeToolchainClang = r"""
-set(CMAKE_SYSTEM_NAME {SYS})
-
-set(triple {TRIPLE})
-
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_C_COMPILER_TARGET ${triple})
-set(CMAKE_CXX_COMPILER clang++)
-set(CMAKE_CXX_COMPILER_TARGET ${triple})
-set(CMAKE_AR ar)
-""";
-
-const String _templateCMakeToolchainNormal = r"""
-set(CMAKE_SYSTEM_NAME {SYS})
-
-set(CMAKE_C_COMPILER {CC})
-set(CMAKE_CXX_COMPILER {CXX})
-
-set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
-set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
-set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
-""";
 
 String getCMakeSystemName(String target) {
   if (target.contains("linux")) {
@@ -38,24 +17,44 @@ String getCMakeSystemName(String target) {
   }
 }
 
-String generateClangCMakeToolchain(String system, String target) {
+Map generateClangCMakeToolchain(String system, String target) {
   if (system == null) {
     system = getCMakeSystemName(target);
   }
 
-  var out = _templateCMakeToolchainClang;
+  var clangTarget = target;
 
   if (clangTargetMap.containsKey(target)) {
-    target = clangTargetMap[target];
+    clangTarget = clangTargetMap[clangTarget];
   }
 
-  out = out.replaceAll("{SYS}", system);
-  out = out.replaceAll("{TRIPLE}", target);
+  var map = {
+    "CMAKE_SYSTEM_NAME": system,
+    "CMAKE_C_COMPILER": "clang",
+    "CMAKE_CXX_COMPILER": "clang",
+    "CMAKE_C_COMPILER_TARGET": clangTarget,
+    "CMAKE_CXX_COMPILER_TARGET": clangTarget
+  };
 
-  return out;
+  var cflags = [];
+  var cxxflags = [];
+
+  addBoth(String flag) {
+    cflags.add(flag);
+    cxxflags.add(flag);
+  }
+
+  if (target.contains("-x86")) {
+    addBoth("-m32");
+  }
+
+  map["CMAKE_C_FLAGS"] = cflags.join(" ");
+  map["CMAKE_CXX_FLAGS"] = cxxflags.join(" ");
+
+  return map;
 }
 
-String generateNormalCMakeToolchain(
+Map generateNormalCMakeToolchain(
   String system,
   String target,
   String cc,
@@ -64,13 +63,13 @@ String generateNormalCMakeToolchain(
     system = getCMakeSystemName(target);
   }
 
-  var out = _templateCMakeToolchainNormal;
+  var map = {
+    "CMAKE_SYSTEM_NAME": system,
+    "CMAKE_C_COMPILER": cc,
+    "CMAKE_CXX_COMPILER": cpp
+  };
 
-  out = out.replaceAll("{SYS}", system);
-  out = out.replaceAll("{CC}", cc);
-  out = out.replaceAll("{CXX}", cpp);
-
-  return out;
+  return map;
 }
 
 class TargetConfig {
@@ -78,20 +77,57 @@ class TargetConfig {
 
   String toolchainFilePath;
   Map<String, dynamic> defs = <String, dynamic>{};
+  Map<String, List<String>> toolchainDefs = <String, List<String>>{};
 
   TargetConfig(this.targetName);
+
+  Future configureCMakeTarget() async {
+    var file = new File("legion/.toolchains/${targetName}.cmake");
+
+    var out = new StringBuffer();
+    for (var key in toolchainDefs.keys) {
+      String mval = '"' + toolchainDefs[key].join(" ") + '"';
+      out.writeln("set(${key} ${mval})");
+    }
+
+    if (await file.exists()) {
+      await file.delete();
+    }
+
+    await file.create(recursive: true);
+    await file.writeAsString(out.toString());
+
+    toolchainFilePath = file.absolute.path;
+  }
 
   void define(String key, value) {
     defs[key] = value;
   }
 
-  List<String> generateArguments([List<String> post]) {
-    if (post == null) {
-      post = <String>[];
-    }
+  Future configure() async {
+    await configureCMakeTarget();
 
     if (toolchainFilePath != null) {
       defs["CMAKE_TOOLCHAIN_FILE"] = toolchainFilePath;
+    }
+  }
+
+  void addToolchainDefs(Map<String, String> map) {
+    for (String key in map.keys) {
+      var nval = map[key];
+      var val = toolchainDefs[key];
+
+      if (val == null) {
+        val = toolchainDefs[key] = [];
+      }
+
+      val.add(nval);
+    }
+  }
+
+  List<String> generateArguments([List<String> post]) {
+    if (post == null) {
+      post = <String>[];
     }
 
     var args = <String>[];
