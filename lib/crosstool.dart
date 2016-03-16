@@ -181,7 +181,7 @@ class CrossTool {
   Future build({bool inherit: true}) async {
     await changeConfigFile({
       "LOG_PROGRESS_BAR": "n",
-      "CT_PREFIX_DIR": getToolchainHome(),
+      "CT_PREFIX_DIR": pathlib.join(getToolchainHome(), _lastToolchainSwitch),
       "CT_LOCAL_TARBALLS_DIR": pathlib.join(_getWorkingDir().path, "src")
     });
 
@@ -206,13 +206,13 @@ class CrossTool {
   Future<String> getToolchain(String name, {bool install: false}) async {
     var dir = new Directory(pathlib.join(getToolchainHome(), name));
     if (await dir.exists()) {
-      return pathlib.join(getToolchainHome(), "bin", "${name}-");
+      return pathlib.join(getToolchainHome(), name, "bin", "${name}-");
     } else {
       if (install) {
         await bootstrap();
         await chooseSample(name);
         await build();
-        return pathlib.join(getToolchainHome(), "bin", "${name}-");
+        return pathlib.join(getToolchainHome(), name, "bin", "${name}-");
       } else {
         reportErrorMessage("Toolchain ${name} not found");
         exit(1);
