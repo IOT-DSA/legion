@@ -1,5 +1,6 @@
 import "brigade.dart" as Brigade;
 import "platoon.dart" as Platoon;
+import "assemble.dart" as Assemble;
 
 import "dart:io";
 
@@ -16,6 +17,8 @@ main(List<String> args) async {
     return await Brigade.main(argv);
   } else if (cmd == "platoon" || cmd == "build" || cmd == "make") {
     return await Platoon.main(argv);
+  } else if (cmd == "assemble" || cmd == "dist") {
+    return await Assemble.main(argv);
   } else if (cmd == "quick" || cmd == "qbuild" || cmd == "war") {
     await Brigade.main(argv);
 

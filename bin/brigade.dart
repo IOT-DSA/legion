@@ -203,6 +203,10 @@ main(List<String> args) async {
     "generator": generatorName
   });
 
+  if (legionConfig["dists"] != null) {
+    state["dists"] = legionConfig["dists"];
+  }
+
   await writeJsonFile("legion/.state", state);
 
   if (hasError) {
