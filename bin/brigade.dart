@@ -127,6 +127,10 @@ main(List<String> args) async {
             "${prefix}cc",
             "${prefix}c++"
           ));
+
+          if (sampleName == "arm-unknown-linux-gnueabi") {
+            config.defs["TOOLCHAIN_DYNAMIC_LINK_ENABLE"] = "ON";
+          }
         } else {
           reportStatusMessage("Skipping build for ${targetName}");
           targetsToGenerate.remove(targetName);
