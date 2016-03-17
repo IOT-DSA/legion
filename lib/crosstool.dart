@@ -19,7 +19,9 @@ const Map<String, String> CROSSTOOL_TARGET_MAP = const {
   "linux-arm-rpi2": "armv7-rpi2-linux-gnueabihf",
   "linux-arm-rpi3": "armv8-rpi3-linux-gnueabihf",
   "linux-aarch64-rpi3": "aarch64-rpi3-linux-gnueabi",
-  "linux-powerpc": "powerpc-unknown-linux-gnu"
+  "linux-powerpc": "powerpc-unknown-linux-gnu",
+  "windows-x32": "i686-w64-mingw32",
+  "windows-x64": "x86_64-w64-mingw32"
 };
 
 class CrossTool {
