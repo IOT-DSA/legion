@@ -129,7 +129,7 @@ main(List<String> args) async {
           ));
 
           if (sampleName == "arm-unknown-linux-gnueabi") {
-            config.defs["TOOLCHAIN_DYNAMIC_LINK_ENABLE"] = "ON";
+            config.defs["TOOLCHAIN_DYNAMIC_LINK_ENABLE"] = "OFF";
           }
         } else {
           reportStatusMessage("Skipping build for ${targetName}");
