@@ -1,6 +1,5 @@
 import "dart:io";
 
-import "package:legit/io.dart";
 import "package:legion/utils.dart";
 
 import "package:path/path.dart" as pathlib;
@@ -59,6 +58,10 @@ main(List<String> args) async {
         }
         await targetFile.parent.create(recursive: true);
         await file.copy(targetPath);
+      } else {
+        reportWarningMessage(
+          "Distributable '${source}' not found for target ${target}"
+        );
       }
     }
 

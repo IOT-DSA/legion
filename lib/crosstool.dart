@@ -204,15 +204,18 @@ class CrossTool {
   String _lastToolchainSwitch = "unknown";
 
   Future<String> getToolchain(String name, {bool install: false}) async {
-    var dir = new Directory(pathlib.join(getToolchainHome(), name));
-    if (await dir.exists()) {
-      return pathlib.join(getToolchainHome(), name, "bin", "${name}-");
+    var prefix = pathlib.join(getToolchainHome(), name, "bin", "${name}-");
+    var gcc = new File("${prefix}gcc");
+    var gpp = new File("${prefix}g++");
+
+    if (await gcc.exists() && await gpp.exists()) {
+      return prefix;
     } else {
       if (install) {
         await bootstrap();
         await chooseSample(name);
         await build();
-        return pathlib.join(getToolchainHome(), name, "bin", "${name}-");
+        return prefix;
       } else {
         reportErrorMessage("Toolchain ${name} not found");
         exit(1);

@@ -75,12 +75,34 @@ reportErrorMessage(String message) {
   print(out.trim());
 }
 
+reportWarningMessage(String message) {
+  var lines = message.trim().split("\n");
+  var out = "${_gold(Icon.WARNING_SIGN)}  ";
+
+  int i = 0;
+  for (String line in lines) {
+    if (i == 0) {
+      out += _boldWhite(line);
+    } else {
+      out += line;
+    }
+    out += "\n";
+    i++;
+  }
+
+  print(out.trim());
+}
+
 class GlobalState {
   static int currentStatusLevel = 0;
 }
 
 _boldWhite(String message) {
   return (new ANSI.AnsiPen()..white(bold: true))(message);
+}
+
+_gold(String message) {
+  return (new ANSI.AnsiPen()..yellow(bold: true))(message);
 }
 
 _boldCyan(String message) {
