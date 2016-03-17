@@ -22,6 +22,7 @@ const Map<String, String> CROSSTOOL_TARGET_MAP = const {
   "linux-mipsel": "mipsel-unknown-linux-gnu",
   "linux-powerpc": "powerpc-unknown-linux-gnu",
   "linux-powerpc-860": "powerpc-860-linux-gnu",
+  "linux-powerpc-e500v2": "powerpc-e500v2-linux-gnuspe",
   "linux-sparc": "sparc-unknown-linux-gnu",
   "windows-x86": "i686-w64-mingw32",
   "windows-x64": "x86_64-w64-mingw32"
