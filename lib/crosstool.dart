@@ -18,6 +18,7 @@ const Map<String, String> CROSSTOOL_TARGET_MAP = const {
   "linux-arm-rpi1": "armv6-rpi-linux-gnueabi",
   "linux-arm-rpi2": "armv7-rpi2-linux-gnueabihf",
   "linux-arm-rpi3": "armv8-rpi3-linux-gnueabihf",
+  "linux-arm-uclibc": "arm-unknown-linux-uclibcgnueabi",
   "linux-aarch64-rpi3": "aarch64-rpi3-linux-gnueabi",
   "linux-mipsel": "mipsel-unknown-linux-gnu",
   "linux-powerpc": "powerpc-unknown-linux-gnu",
