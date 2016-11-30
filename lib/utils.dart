@@ -10,7 +10,7 @@ import "package:ansicolor/ansicolor.dart" as ANSI;
 import "package:path/path.dart" as pathlib;
 import "package:system_info/system_info.dart";
 
-const Map<String, String> _ARCHITECTURE_MAP = const {
+const Map<String, String> _architectures = const {
   "x86_64": "x64",
   "i386": "x86",
   "i686": "x86"
@@ -20,6 +20,7 @@ class Icon {
   static const String NAV_ARROW = "\u27A4";
   static const String WARNING_SIGN = "\u26A0";
   static const String NIB = "\u2712";
+  static const String RIGHTWARDS_ARROWHEAD = "\u27A4";
 }
 
 String getHomeDirectory() {
@@ -52,14 +53,14 @@ File getLegionHomeFile(String path) {
 
 reportStatusMessage(String message) {
   print(
-    "${'  ' * GlobalState.currentStatusLevel}${_boldCyan(Icon.NIB)}"
-      "  ${_boldWhite(message)}"
+    "${'  ' * GlobalState.currentStatusLevel}${_boldCyan(Icon.RIGHTWARDS_ARROWHEAD)}"
+      " ${_boldWhite(message)}"
   );
 }
 
 reportErrorMessage(String message) {
   var lines = message.trim().split("\n");
-  var out = "${red(Icon.WARNING_SIGN)}  ";
+  var out = "${red(Icon.WARNING_SIGN)} ";
 
   int i = 0;
   for (String line in lines) {
@@ -77,7 +78,7 @@ reportErrorMessage(String message) {
 
 reportWarningMessage(String message) {
   var lines = message.trim().split("\n");
-  var out = "${_gold(Icon.WARNING_SIGN)}  ";
+  var out = "${_gold(Icon.WARNING_SIGN)} ";
 
   int i = 0;
   for (String line in lines) {
@@ -172,8 +173,8 @@ Future writeJsonFile(String path, data) async {
 String getLocalArch() {
   var arch = SysInfo.kernelArchitecture;
 
-  if (_ARCHITECTURE_MAP[arch] is String) {
-    arch = _ARCHITECTURE_MAP[arch];
+  if (_architectures[arch] is String) {
+    arch = _architectures[arch];
   }
 
   return arch;

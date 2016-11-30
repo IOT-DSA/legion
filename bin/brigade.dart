@@ -112,8 +112,12 @@ main(List<String> args) async {
         ));
       } else {
         String sampleName = targetName;
-        if (CROSSTOOL_TARGET_MAP.containsKey(targetName)) {
-          sampleName = CROSSTOOL_TARGET_MAP[targetName];
+        if (crosstoolTargetMap.containsKey(targetName)) {
+          sampleName = crosstoolTargetMap[targetName];
+        }
+
+        if (sampleName.endsWith("--x86")) {
+          sampleName = sampleName.substring(0, sampleName.length - 5);
         }
 
         await crosstool.bootstrap();
@@ -130,6 +134,16 @@ main(List<String> args) async {
 
           if (sampleName == "arm-unknown-linux-gnueabi") {
             config.defs["TOOLCHAIN_DYNAMIC_LINK_ENABLE"] = "OFF";
+          }
+
+          if (getBooleanSetting("link.static", legionConfig)) {
+            config.defineOrAppend("CMAKE_EXE_LINKER_FLAGS", "-static");
+          }
+
+          if (getBooleanSetting("toolchain.force.x86")) {
+            config.defineOrAppend("CMAKE_C_FLAGS", "-m32");
+            config.defineOrAppend("CMAKE_CXX_FLAGS", "-m32");
+            config.defineOrAppend("CMAKE_EXE_LINKER_FLAGS", "-m32");
           }
         } else {
           reportStatusMessage("Skipping build for ${targetName}");

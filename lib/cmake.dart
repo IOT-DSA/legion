@@ -69,6 +69,17 @@ Map generateNormalCMakeToolchain(
     "CMAKE_CXX_COMPILER": cpp
   };
 
+  var cflags = [];
+  var cxxflags = [];
+
+  addBoth(String flag) {
+    cflags.add(flag);
+    cxxflags.add(flag);
+  }
+
+  map["CMAKE_C_FLAGS"] = cflags.join(" ");
+  map["CMAKE_CXX_FLAGS"] = cxxflags.join(" ");
+
   return map;
 }
 
@@ -102,6 +113,16 @@ class TargetConfig {
 
   void define(String key, value) {
     defs[key] = value;
+  }
+
+  void defineOrAppend(String key, value) {
+    var tmp = defs[key];
+    if (tmp is String && tmp.trim().isNotEmpty) {
+      tmp += (tmp.endsWith(" ") ? "" : " ") + value;
+    } else {
+      tmp = value;
+    }
+    defs[key] = tmp;
   }
 
   Future configure() async {

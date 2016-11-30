@@ -9,9 +9,9 @@ import "package:legit/legit.dart";
 import "package:legit/io.dart";
 import "package:path/path.dart" as pathlib;
 
-const String _GIT_URL = "https://github.com/crosstool-ng/crosstool-ng.git";
+const String _gitUrl = "https://github.com/crosstool-ng/crosstool-ng.git";
 
-const Map<String, String> CROSSTOOL_TARGET_MAP = const {
+const Map<String, String> crosstoolTargetMap = const {
   "linux-x86": "i686-none-linux-gnu",
   "linux-x64": "x86_64-unknown-linux-gnu",
   "linux-arm": "arm-unknown-eabi",
@@ -53,7 +53,7 @@ class CrossTool {
     var git = new GitClient.forDirectory(dir);
 
     if (!(await git.isRepository())) {
-      await git.clone(_GIT_URL);
+      await git.clone(_gitUrl);
     }
 
     reportStatusMessage("Bootstrapping CrossTool");
@@ -66,7 +66,9 @@ class CrossTool {
     );
 
     if (result.exitCode != 0) {
-      reportErrorMessage("Failed to bootstrap CrossTool:\n${result.output}".trim());
+      reportErrorMessage(
+        "Failed to bootstrap CrossTool:\n${result.output}".trim()
+      );
       exit(1);
     }
 
