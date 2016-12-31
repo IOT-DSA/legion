@@ -1,4 +1,4 @@
-import "package:legion/crosstool.dart";
+import "package:legion/src/toolchains/crosstool.dart";
 
 main() async {
   var crosstool = new CrossTool();

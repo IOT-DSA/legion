@@ -1,9 +1,10 @@
-library legion.crosstool;
+library legion.toolchains.crosstool;
 
 import "dart:async";
 import "dart:io";
 
-import "utils.dart";
+import "package:legion/api.dart";
+import "package:legion/utils.dart";
 
 import "package:legit/legit.dart";
 import "package:legit/io.dart";
@@ -268,5 +269,86 @@ class CrossTool {
       wlines.add("${key}=${out[key]}");
     }
     await file.writeAsString(wlines.join("\n"));
+  }
+}
+
+class CrossToolToolchainProvider extends ToolchainProvider {
+  final CrossTool crosstool = new CrossTool();
+
+  @override
+  Future<String> getProviderName() async => "crosstool";
+
+  @override
+  Future<bool> isTargetSupported(String target, Project project) async {
+    await crosstool.bootstrap();
+
+    if (crosstoolTargetMap[target] is String) {
+      target = crosstoolTargetMap[target];
+    }
+
+    var samples = await crosstool.listSamples();
+
+    return samples.contains(target);
+  }
+
+  @override
+  Future<Toolchain> getToolchain(String target, Project project) async {
+    await crosstool.bootstrap();
+
+    if (crosstoolTargetMap[target] is String) {
+      target = crosstoolTargetMap[target];
+    }
+
+    var path = await crosstool.getToolchain(target, install: true);
+    var toolchain = new CrossToolToolchain(target, path);
+
+    return toolchain;
+  }
+
+  @override
+  Future<List<String>> listBasicTargets() async {
+    return await crosstoolTargetMap.keys.toList();
+  }
+}
+
+class CrossToolToolchain extends Toolchain {
+  final String sample;
+  final String path;
+
+  CrossToolToolchain(this.sample, this.path);
+
+  @override
+  Future applyToBuilder(Builder builder) async {}
+
+  @override
+  Future<List<String>> getCFlags() async {
+    return [];
+  }
+
+  @override
+  Future<List<String>> getCxxFlags() async {
+    return [];
+  }
+
+  @override
+  Future<String> getSystemName() async {
+    if (sample.contains("mingw32")) {
+      return "Windows";
+    } else if (sample.contains("darwin")) {
+      return "Darwin";
+    } else {
+      return "Linux";
+    }
+  }
+
+  @override
+  Future<String> getToolPath(String tool) async {
+    var base = await getToolchainBase();
+    return "${base}-${tool}";
+  }
+
+  @override
+  Future<String> getToolchainBase() async {
+    return resolveWorkingPath("bin/${sample}", from: path);
   }
 }

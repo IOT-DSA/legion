@@ -4,7 +4,6 @@ import "dart:async";
 import "dart:io";
 import "dart:convert";
 
-import "package:dye/dye.dart";
 import "package:ansicolor/ansicolor.dart" as ANSI;
 
 import "package:path/path.dart" as pathlib;
@@ -13,8 +12,24 @@ import "package:system_info/system_info.dart";
 const Map<String, String> _architectures = const {
   "x86_64": "x64",
   "i386": "x86",
-  "i686": "x86"
+  "i686": "x86",
+  "amd64": "x64"
 };
+
+class LegionError {
+  final String message;
+
+  LegionError(this.message);
+
+  @override
+  String toString() => message;
+}
+
+bool isArchX86_32Bit(String arch) =>
+  [arch, _architectures[arch]].any((x) => const ["x86", "x32"].contains(x));
+
+bool isTargetX86_32Bit(String target) =>
+    isArchX86_32Bit(target.split("-").last);
 
 class Icon {
   static const String NAV_ARROW = "\u27A4";
@@ -51,16 +66,20 @@ File getLegionHomeFile(String path) {
   return new File(pathlib.join(getLegionHome(), path));
 }
 
-reportStatusMessage(String message) {
-  print(
-    "${'  ' * GlobalState.currentStatusLevel}${_boldCyan(Icon.RIGHTWARDS_ARROWHEAD)}"
-      " ${_boldWhite(message)}"
-  );
+void reportStatusMessage(String message) {
+  var msg = "${'  ' * GlobalState.currentStatusLevel}"
+            "${_blue(Icon.NAV_ARROW)} ${_boldWhite(message)}";
+
+  print(msg);
 }
 
-reportErrorMessage(String message) {
+void reportErrorMessage(String message) {
+  GlobalState.hasError = true;
+  exitCode = 1;
+
   var lines = message.trim().split("\n");
-  var out = "${red(Icon.WARNING_SIGN)} ";
+  var out = "${'  ' * GlobalState.currentStatusLevel}"
+            "${_boldRed(Icon.NAV_ARROW)} ";
 
   int i = 0;
   for (String line in lines) {
@@ -76,9 +95,20 @@ reportErrorMessage(String message) {
   print(out.trim());
 }
 
-reportWarningMessage(String message) {
+Future executeWithStatusLevel(function()) async {
+  GlobalState.currentStatusLevel++;
+
+  try {
+    await function();
+  } finally {
+    GlobalState.currentStatusLevel--;
+  }
+}
+
+void reportWarningMessage(String message) {
   var lines = message.trim().split("\n");
-  var out = "${_gold(Icon.WARNING_SIGN)} ";
+  var out = "${'  ' * GlobalState.currentStatusLevel}"
+            "${_gold(Icon.WARNING_SIGN)} ";
 
   int i = 0;
   for (String line in lines) {
@@ -96,6 +126,7 @@ reportWarningMessage(String message) {
 
 class GlobalState {
   static int currentStatusLevel = 0;
+  static bool hasError = false;
 }
 
 _boldWhite(String message) {
@@ -108,6 +139,18 @@ _gold(String message) {
 
 _boldCyan(String message) {
   return (new ANSI.AnsiPen()..cyan(bold: true))(message);
+}
+
+_blue(String message) {
+  return (new ANSI.AnsiPen()..blue(bold: true))(message);
+}
+
+_boldRed(String message) {
+  return (new ANSI.AnsiPen()..red(bold: true))(message);
+}
+
+_red(String message) {
+  return (new ANSI.AnsiPen()..red())(message);
 }
 
 Future<Map<String, Map<String, dynamic>>> getTargetConfig() async {
@@ -223,7 +266,7 @@ Future<String> findExecutable(String name) async {
   return null;
 }
 
-bool getBooleanSetting(String name, [config]) {
+bool getBooleanEnvSetting(String name) {
   var env = "LEGION_" + name.replaceAll(".", "_").toUpperCase();
 
   if (const [
@@ -237,9 +280,38 @@ bool getBooleanSetting(String name, [config]) {
     return true;
   }
 
-  if (config != null && config[name] == true) {
-    return true;
+  return false;
+}
+
+List<List<String>> splitExtraArguments(List<String> args) {
+  var out = <List<String>>[];
+
+  var list = <String>[];
+  for (var arg in args) {
+    if (arg == "--") {
+      out.add(list);
+      list = <String>[];
+    } else {
+      list.add(arg);
+    }
   }
 
-  return false;
+  if (list.isNotEmpty) {
+    out.add(list);
+  }
+
+  return out;
+}
+
+Future<dynamic> makeChoiceByFileExistence(Map<String, dynamic> files, {from}) async {
+  for (var key in files.keys) {
+    var p = resolveWorkingPath(key, from: from);
+    var file = new File(p);
+
+    if (await file.exists()) {
+      return files[key];
+    }
+  }
+
+  return files["_"];
 }
