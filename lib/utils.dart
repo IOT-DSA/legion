@@ -68,7 +68,7 @@ File getLegionHomeFile(String path) {
 
 void reportStatusMessage(String message) {
   var msg = "${'  ' * GlobalState.currentStatusLevel}"
-            "${_blue(Icon.NAV_ARROW)} ${_boldWhite(message)}";
+            "${_blue(Icon.NAV_ARROW)} ${_magenta(message)}";
 
   print(msg);
 }
@@ -84,7 +84,7 @@ void reportErrorMessage(String message) {
   int i = 0;
   for (String line in lines) {
     if (i == 0) {
-      out += _boldWhite(line);
+      out += _magenta(line);
     } else {
       out += line;
     }
@@ -113,7 +113,7 @@ void reportWarningMessage(String message) {
   int i = 0;
   for (String line in lines) {
     if (i == 0) {
-      out += _boldWhite(line);
+      out += _magenta(line);
     } else {
       out += line;
     }
@@ -129,8 +129,8 @@ class GlobalState {
   static bool hasError = false;
 }
 
-_boldWhite(String message) {
-  return (new ANSI.AnsiPen()..white(bold: true))(message);
+_magenta(String message) {
+  return (new ANSI.AnsiPen()..magenta())(message);
 }
 
 _gold(String message) {
@@ -266,6 +266,39 @@ Future<String> findExecutable(String name) async {
   return null;
 }
 
+String findExecutableSync(String name) {
+  var paths = Platform.environment["PATH"].split(
+    Platform.isWindows ? ";" : ":"
+  );
+  var tryFiles = [name];
+
+  if (Platform.isWindows) {
+    tryFiles.addAll(["${name}.exe", "${name}.bat"]);
+  }
+
+  for (var p in paths) {
+    if (Platform.environment.containsKey("HOME")) {
+      p = p.replaceAll("~/", Platform.environment["HOME"]);
+    }
+
+    var dir = new Directory(pathlib.normalize(p));
+
+    if (!dir.existsSync()) {
+      continue;
+    }
+
+    for (var t in tryFiles) {
+      var file = new File("${dir.path}/${t}");
+
+      if (file.existsSync()) {
+        return file.path;
+      }
+    }
+  }
+
+  return null;
+}
+
 bool getBooleanEnvSetting(String name) {
   var env = "LEGION_" + name.replaceAll(".", "_").toUpperCase();
 
@@ -314,4 +347,38 @@ Future<dynamic> makeChoiceByFileExistence(Map<String, dynamic> files, {from}) as
   }
 
   return files["_"];
+}
+
+final RegExp _shellEscapeNeeded = new RegExp(r"[^A-Za-z0-9_\/:=-]");
+final RegExp _shellEscapeDupSingle = new RegExp(r"^(?:'')+");
+final RegExp _shellEscapeNonEscaped = new RegExp(r"\\'''");
+
+String escapeShellArgument(String arg) {
+  if (_shellEscapeNeeded.hasMatch(arg)) {
+    arg = "'" + arg.replaceAll("'", "'\\''") + "'";
+    arg = arg
+      .replaceAll(_shellEscapeDupSingle, "")
+      .replaceAll(_shellEscapeNonEscaped, "\\'");
+  }
+  return arg;
+}
+
+String escapeShellArgumentList(List<String> args) {
+  return args.map(escapeShellArgument).join(" ");
+}
+
+String escapeShellArguments(String exe, List<String> args) {
+  var out = <String>[];
+
+  void escape(String arg) {
+    out.add(escapeShellArgument(arg));
+  }
+
+  escape(exe);
+
+  for (var arg in args) {
+    escape(arg);
+  }
+
+  return out.join(" ");
 }

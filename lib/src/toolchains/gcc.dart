@@ -5,6 +5,7 @@ import "dart:io";
 
 import "package:legion/api.dart";
 import "package:legion/utils.dart";
+import "package:legion/storage.dart";
 
 import "generic_compiler.dart";
 
@@ -20,28 +21,6 @@ class GccToolchain extends Toolchain {
 
   @override
   Future applyToBuilder(Builder builder) async {
-  }
-
-  @override
-  Future<List<String>> getCFlags() async {
-    var args = <String>[];
-
-    if (isTargetX86_32Bit(target)) {
-      args.add("-m32");
-    }
-
-    return args;
-  }
-
-  @override
-  Future<List<String>> getCxxFlags() async {
-    var args = <String>[];
-
-    if (isTargetX86_32Bit(target)) {
-      args.add("-m32");
-    }
-
-    return args;
   }
 
   @override
@@ -79,28 +58,50 @@ class GccToolchain extends Toolchain {
     }
     return prefix;
   }
+  @override
+  Future<Map<String, List<String>>> getEnvironmentVariables() async {
+    var compilers = <String>[];
+
+    if (isTargetX86_32Bit(target)) {
+      compilers.add("-m32");
+    }
+
+    return <String, List<String>>{
+      "CFLAGS": compilers,
+      "CCFLAGS": compilers,
+      "ASFLAGS": compilers
+    };
+  }
 }
 
 class GccToolchainProvider extends ToolchainProvider {
-  @override
-  Future<String> getProviderName() async => "gcc";
+  static final String defaultGccPath = findExecutableSync("gcc");
+
+  final String path;
+
+  GccToolchainProvider(this.path);
 
   @override
-  Future<Toolchain> getToolchain(String target, Project project) async {
-    var executable = await findExecutable("gcc");
-    var gcc = new GccHelper(executable);
+  Future<String> getProviderId() async => "gcc";
+
+  @override
+  Future<Toolchain> getToolchain(String target, StorageContainer config) async {
+    if (path == null) {
+      return null;
+    }
+
+    var gcc = new GccHelper(path);
 
     return new GccToolchain(target, gcc);
   }
 
   @override
-  Future<bool> isTargetSupported(String target, Project project) async {
-    var executable = await findExecutable("gcc");
-    if (executable == null) {
+  Future<bool> isTargetSupported(String target, StorageContainer config) async {
+    if (path == null) {
       return false;
     }
 
-    var gcc = new GccHelper(executable);
+    var gcc = new GccHelper(path);
     var targets = await gcc.getTargetNames();
 
     return targets.contains(target);
@@ -108,14 +109,18 @@ class GccToolchainProvider extends ToolchainProvider {
 
   @override
   Future<List<String>> listBasicTargets() async {
-    var executable = await findExecutable("gcc");
-
-    if (executable == null) {
-      return const [];
+    if (path == null) {
+      return const <String>[];
     }
 
-    var gcc = new GccHelper(executable);
+    var gcc = new GccHelper(path);
     var targets = await gcc.getTargetNames(basic: true);
+
     return targets;
+  }
+
+  @override
+  Future<String> getProviderDescription() async {
+    return "GCC (${path})";
   }
 }

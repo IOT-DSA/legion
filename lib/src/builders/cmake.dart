@@ -133,8 +133,10 @@ class CMakeBuilder extends Builder {
     var system = await target.toolchain.getSystemName();
     var cc = await target.toolchain.getToolPath("cc");
     var cxx = await target.toolchain.getToolPath("c++");
-    var cflags = await target.toolchain.getCFlags();
-    var cxxflags = await target.toolchain.getCxxFlags();
+    var env = await target.toolchain.getEnvironmentVariables();
+
+    var cflags = env["CFLAGS"] is List ? env["CFLAGS"] : [];
+    var cxxflags = env["CCFLAGS"] is List ? env["CCFLAGS"] : [];
 
     var generator = new CMakeTargetGenerator(target);
 

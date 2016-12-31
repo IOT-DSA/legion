@@ -3,9 +3,7 @@ library legion.toolchains.generic_compiler;
 import "dart:async";
 import "dart:io";
 
-import "package:legion/api.dart";
 import "package:legion/io.dart";
-import "package:legion/utils.dart";
 
 class GenericCompilerHelper {
   final String path;

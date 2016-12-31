@@ -4,6 +4,7 @@ import "dart:async";
 import "dart:io";
 
 import "package:legion/api.dart";
+import "package:legion/storage.dart";
 import "package:legion/utils.dart";
 
 import "package:legit/legit.dart";
@@ -221,7 +222,7 @@ class CrossTool {
     var gpp = new File("${prefix}g++");
 
     if (await gcc.exists() && await gpp.exists()) {
-      return prefix;
+      return prefix.substring(0, prefix.length - 1);
     } else {
       if (install) {
         await bootstrap();
@@ -229,9 +230,7 @@ class CrossTool {
         await build();
         return prefix;
       } else {
-        reportErrorMessage("Toolchain ${name} not found");
-        exit(1);
-        return null;
+        throw new LegionError("Toolchain ${name} not found");
       }
     }
   }
@@ -276,10 +275,10 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   final CrossTool crosstool = new CrossTool();
 
   @override
-  Future<String> getProviderName() async => "crosstool";
+  Future<String> getProviderId() async => "crosstool";
 
   @override
-  Future<bool> isTargetSupported(String target, Project project) async {
+  Future<bool> isTargetSupported(String target, StorageContainer config) async {
     await crosstool.bootstrap();
 
     if (crosstoolTargetMap[target] is String) {
@@ -292,7 +291,7 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   }
 
   @override
-  Future<Toolchain> getToolchain(String target, Project project) async {
+  Future<Toolchain> getToolchain(String target, StorageContainer config) async {
     await crosstool.bootstrap();
 
     if (crosstoolTargetMap[target] is String) {
@@ -309,6 +308,10 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   Future<List<String>> listBasicTargets() async {
     return await crosstoolTargetMap.keys.toList();
   }
+  @override
+  Future<String> getProviderDescription() async {
+    return "CrossTool";
+  }
 }
 
 class CrossToolToolchain extends Toolchain {
@@ -319,16 +322,6 @@ class CrossToolToolchain extends Toolchain {
 
   @override
   Future applyToBuilder(Builder builder) async {}
-
-  @override
-  Future<List<String>> getCFlags() async {
-    return [];
-  }
-
-  @override
-  Future<List<String>> getCxxFlags() async {
-    return [];
-  }
 
   @override
   Future<String> getSystemName() async {
@@ -349,6 +342,12 @@ class CrossToolToolchain extends Toolchain {
 
   @override
   Future<String> getToolchainBase() async {
-    return resolveWorkingPath("bin/${sample}", from: path);
+    return path;
+  }
+
+  @override
+  Future<Map<String, List<String>>> getEnvironmentVariables() async {
+    var m = <String, List<String>>{};
+    return m;
   }
 }

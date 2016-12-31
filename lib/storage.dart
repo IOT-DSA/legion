@@ -293,3 +293,11 @@ abstract class StorageContainer {
 
   Map<String, dynamic> get entries;
 }
+
+class MockStorageContainer extends StorageContainer {
+  @override
+  Map<String, dynamic> get entries => {};
+
+  @override
+  void onChange() {}
+}

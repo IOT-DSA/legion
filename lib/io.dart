@@ -4,6 +4,8 @@ import "dart:async";
 import "dart:convert";
 import "dart:io";
 
+import "utils.dart";
+
 typedef ProcessResultHandler(BetterProcessResult result);
 typedef ProcessHandler(Process process);
 typedef OutputHandler(String string);
@@ -108,7 +110,7 @@ Future<BetterProcessResult> executeCommand(String executable,
     } else {
       args.addAll(<String>[
         "-qfc",
-        _escapeShellArguments(rcmd, rargs),
+        escapeShellArguments(rcmd, rargs),
         "/dev/null"
       ]);
     }
@@ -300,31 +302,4 @@ Future<BetterProcessResult> executeCommand(String executable,
 
 String get _currentTimestamp {
   return new DateTime.now().toString();
-}
-
-final RegExp _shellEscapeNeeded = new RegExp(r"[^A-Za-z0-9_\/:=-]");
-final RegExp _shellEscapeDupSingle = new RegExp(r"^(?:'')+");
-final RegExp _shellEscapeNonEscaped = new RegExp(r"\\'''");
-
-String _escapeShellArguments(String exe, List<String> args) {
-  var out = <String>[];
-
-  void escape(String arg) {
-    if (_shellEscapeNeeded.hasMatch(arg)) {
-      arg = "'" + arg.replaceAll("'", "'\\''") + "'";
-      arg = arg
-        .replaceAll(_shellEscapeDupSingle, "")
-        .replaceAll(_shellEscapeNonEscaped, "\\'");
-    }
-
-    out.add(arg);
-  }
-
-  escape(exe);
-
-  for (var arg in args) {
-    escape(arg);
-  }
-
-  return out.join(" ");
 }

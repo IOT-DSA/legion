@@ -37,7 +37,7 @@ class BuildCycle {
         continue;
       }
 
-      var toolchain = await toolchainProvider.getToolchain(name, project);
+      var toolchain = await toolchainProvider.getToolchain(name, project.config);
 
       if (toolchain == null) {
         reportErrorMessage("Unable to find toolchain for target ${name}");
@@ -94,19 +94,7 @@ class BuildCycle {
   }
 
   Future<ToolchainProvider> getToolchainProvider(String targetName) async {
-    for (var provider in toolchainProviders) {
-      var providerName  = await provider.getProviderName();
-
-      if (targetName.startsWith("${providerName}:")) {
-        targetName = targetName.substring("${providerName}:".length);
-      }
-
-      if (await provider.isTargetSupported(targetName, project)) {
-        return provider;
-      }
-    }
-
-    return null;
+    return await resolveToolchainProvider(targetName, project.config);
   }
 
   Future<BuilderProvider> getBuilderProvider() async {
