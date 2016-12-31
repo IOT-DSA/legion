@@ -11,6 +11,7 @@ import "src/builders/cmake.dart" as CMake;
 import "src/toolchains/crosstool.dart" as CrossTool;
 import "src/toolchains/gcc.dart" as Gcc;
 import "src/toolchains/clang.dart" as Clang;
+import "src/toolchains/osxcross.dart" as OsxCross;
 
 part "src/builder/stage.dart";
 part "src/builder/cycle.dart";
@@ -23,6 +24,7 @@ final List<BuilderProvider> builderProviders = <BuilderProvider>[
 final List<ToolchainProvider> toolchainProviders = <ToolchainProvider>[
   new Gcc.GccToolchainProvider(Gcc.GccToolchainProvider.defaultGccPath),
   new Clang.ClangToolchainProvider(Clang.ClangToolchainProvider.defaultClangPath),
+  new OsxCross.OsxCrossToolchainProvider(),
   new CrossTool.CrossToolToolchainProvider()
 ];
 

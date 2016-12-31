@@ -17,7 +17,7 @@ class BuildCycle {
       } else {
         throw new LegionError("Unknown build stage ${stage}");
       }
-    } catch (e) {
+    } on LegionError catch (e) {
       reportErrorMessage(e.toString());
     }
   }
