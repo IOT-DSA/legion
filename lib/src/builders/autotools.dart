@@ -46,6 +46,8 @@ class AutotoolsBuilder extends Builder {
       configureScriptFile.path
     ];
 
+    args.addAll(target.extraArguments);
+
     var targetMachine = await target.toolchain.getTargetMachine();
     args.add("--host=${targetMachine}");
 
@@ -76,9 +78,13 @@ class AutotoolsBuilder extends Builder {
 
   @override
   Future build() async {
+    var args = <String>[];
+
+    args.addAll(target.extraArguments);
+
     var result = await executeCommand(
       "make",
-      args: [],
+      args: args,
       inherit: true,
       workingDirectory: target.buildDirectory.path
     );
