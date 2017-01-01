@@ -302,7 +302,12 @@ class CrossToolToolchainProvider extends ToolchainProvider {
     }
 
     var path = await crosstool.getToolchain(target, install: true);
-    var toolchain = new CrossToolToolchain(target, original, path);
+    var gcc = new Gcc.GccHelper("${path}-gcc");
+
+    var toolchain = new Gcc.GccToolchain(
+      original,
+      gcc
+    );
 
     return toolchain;
   }
@@ -314,54 +319,5 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   @override
   Future<String> getProviderDescription() async {
     return "CrossTool";
-  }
-}
-
-class CrossToolToolchain extends Toolchain {
-  final String sample;
-  final String path;
-  final String target;
-
-  CrossToolToolchain(this.sample, this.target, this.path);
-
-  @override
-  Future applyToBuilder(Builder builder) async {}
-
-  @override
-  Future<String> getSystemName() async {
-    if (sample.contains("mingw32")) {
-      return "Windows";
-    } else if (sample.contains("darwin")) {
-      return "Darwin";
-    } else {
-      return "Linux";
-    }
-  }
-
-  @override
-  Future<String> getToolPath(String tool) async {
-    var base = await getToolchainBase();
-    return "${base}-${tool}";
-  }
-
-  @override
-  Future<String> getToolchainBase() async {
-    return path;
-  }
-
-  @override
-  Future<Map<String, List<String>>> getEnvironmentVariables() async {
-    var m = <String, List<String>>{};
-    return m;
-  }
-
-  @override
-  Future<String> getTargetMachine() async {
-    var gcc = new Gcc.GccHelper(await getToolPath("cc"));
-    var machine = await gcc.getTargetMachine();
-    if (isTargetX86_32Bit(target)) {
-      machine = machine.replaceAll("x86_64", "i386");
-    }
-    return machine;
   }
 }
