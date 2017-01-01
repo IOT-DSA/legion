@@ -4,6 +4,8 @@ import "assemble.dart" as Assemble;
 
 import "dart:io";
 
+import "package:legion/utils.dart";
+
 main(List<String> args) async {
   if (args.isEmpty) {
     print("Usage: legion <command> [args]");
@@ -21,6 +23,10 @@ main(List<String> args) async {
     return await Assemble.main(argv);
   } else if (cmd == "quick" || cmd == "qbuild" || cmd == "war") {
     await Brigade.main(argv);
+
+    if (GlobalState.hasError) {
+      return null;
+    }
 
     var platoonArgString = Platform.environment["LEGION_BUILD_ARGS"];
     var platoonArgs = <String>[];

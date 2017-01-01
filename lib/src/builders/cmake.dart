@@ -1,7 +1,6 @@
 library legion.builders.cmake;
 
 import "dart:async";
-import "dart:io";
 
 import "package:legion/api.dart";
 import "package:legion/io.dart";
@@ -157,14 +156,26 @@ class CMakeBuilder extends Builder {
       generator.defineOrAppend("CMAKE_CXX_FLAGS", flag);
     }
 
+    var userDefs = new Map<String, dynamic>.from(
+      await target.project.getMapSetting("cmake.defs")
+    );
+
+    userDefs.addAll(
+      await target.project.getMapSetting("cmake.targets.${target}.defs")
+    );
+
+    for (var key in userDefs.keys) {
+      generator.defineOrAppend(key, userDefs[key]);
+    }
+
     var dir = await target.ensureCleanBuildDirectory();
 
     var extraArguments = new List<String>.from(target.extraArguments);
 
     extraArguments.add("-G");
-    extraArguments.add(target.project.config.getString(
+    extraArguments.add(await target.getStringSetting(
       "cmake.generator",
-      defaultValue: "Unix Makefiles"
+      "Unix Makefiles"
     ));
 
     extraArguments.add("../..");

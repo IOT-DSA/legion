@@ -9,9 +9,9 @@ class Target {
   Target(this.project, this.name, this.toolchain, this.extraArguments);
 
   Future<bool> getBooleanSetting(String name) async {
-    return await project.getBooleanSetting(name) || project.config.getSubStorage(
-      this.name
-    ).getBoolean(name);
+    return await project.getBooleanSetting(name) || await project.getBooleanSetting(
+      "targets.${this.name}.${name}"
+    );
   }
 
   Directory get buildDirectory {
@@ -46,4 +46,8 @@ class Target {
   }
 
   Directory _buildDirectory;
+
+  Future<String> getStringSetting(String key, [String defaultValue]) async {
+    return await project.getStringSetting(key, defaultValue);
+  }
 }

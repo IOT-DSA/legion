@@ -15,10 +15,7 @@ main(List<String> args) async {
   await project.init();
 
   if (targets.isEmpty) {
-    targets.addAll(project.config.getList(
-      "defaultTargets",
-      defaultValue: <String>[]
-    ).where((x) => x is String));
+    targets.addAll(await project.getStringListSetting("defaultTargets"));
   }
 
   var executions = [

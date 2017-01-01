@@ -33,8 +33,38 @@ class Project {
     return new Target(this, name, toolchain, extraArguments);
   }
 
-  Future<bool> getBooleanSetting(String name) async {
-    return getBooleanEnvSetting(name) || config.getBoolean(name);
+  Future<dynamic> getSetting(String key) async {
+    return resolveConfigValue(config.entries, key);
+  }
+
+  Future<List<String>> getStringListSetting(String key) async {
+    var value = resolveConfigValue(config.entries, key);
+    if (value is List) {
+      return value.where((x) => x is String).toList();
+    }
+    return const <String>[];
+  }
+
+  Future<Map<String, dynamic>> getMapSetting(String key) async {
+    var value = resolveConfigValue(config.entries, key);
+    if (value is Map) {
+      return value;
+    }
+    return const <String, dynamic>{};
+  }
+
+  Future<bool> getBooleanSetting(String key) async {
+    return resolveConfigValue(config.entries, key) == true;
+  }
+
+  Future<String> getStringSetting(String key, [String defaultValue = ""]) async {
+    var str = resolveConfigValue(config.entries, key);
+
+    if (str is! String) {
+      str = defaultValue;
+    }
+
+    return str;
   }
 
   File getFile(String path) {

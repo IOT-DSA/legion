@@ -471,3 +471,30 @@ int _getPermissionBitIndex(FilePermission permission, FilePermissionRole role) {
     default: return (role.index * 3) + permission.index;
   }
 }
+
+dynamic resolveConfigValue(root, String key) {
+  dynamic _resolve(sec, List<String> parts) {
+    if (sec is Map) {
+      if (parts.length == 1) {
+        return sec[parts.first];
+      }
+
+      var fkey = parts.join(".");
+      if (sec.containsKey(fkey)) {
+        return sec[fkey];
+      }
+
+      var rkey = parts.first;
+
+      if (sec.containsKey(rkey)) {
+        return _resolve(sec[rkey], parts.sublist(1));
+      }
+
+      return null;
+    } else {
+      return null;
+    }
+  }
+
+  return _resolve(root, key.split("."));
+}

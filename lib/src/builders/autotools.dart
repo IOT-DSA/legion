@@ -19,6 +19,9 @@ class AutotoolsBuilder extends Builder {
     ));
 
     if (shouldRunBootstrap) {
+      var exe = "bash";
+      var args = <String>[];
+
       var bootstrapFile = target.project.getFile("bootstrap");
 
       if (!(await bootstrapFile.exists())) {
@@ -26,19 +29,21 @@ class AutotoolsBuilder extends Builder {
       }
 
       if (!(await bootstrapFile.exists())) {
-        throw new LegionError("Bootstrap script not found");
+        exe = "autoconf";
+      } else {
+        args = <String>[bootstrapFile.path];
       }
 
       var result = await executeCommand(
-        "bash",
-        args: [bootstrapFile.path],
+        exe,
+        args: args,
         writeToBuffer: true,
         inherit: true,
         workingDirectory: target.project.directory.path
       );
 
       if (result.exitCode != 0) {
-        throw new LegionError("Bootstrap failed");
+        throw new LegionError("Bootstrap failed for target ${target.name}");
       }
     }
 
@@ -72,7 +77,7 @@ class AutotoolsBuilder extends Builder {
     );
 
     if (result.exitCode != 0) {
-      throw new LegionError("Configure failed");
+      throw new LegionError("Configure failed for target ${target.name}");
     }
   }
 
@@ -90,7 +95,7 @@ class AutotoolsBuilder extends Builder {
     );
 
     if (result.exitCode != 0) {
-      throw new LegionError("Make failed");
+      throw new LegionError("Make failed for target ${target.name}");
     }
   }
 }
@@ -109,6 +114,6 @@ class AutotoolsBuilderProvider extends BuilderProvider {
     return await project.hasFile("configure") || (
       await project.hasFile("bootstrap") ||
       await project.hasFile("autogen.sh")
-    );
+    ) || await project.hasFile("configure.ac");
   }
 }
