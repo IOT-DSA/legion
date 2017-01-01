@@ -8,6 +8,8 @@ import "storage.dart";
 import "utils.dart";
 
 import "src/builders/cmake.dart" as CMake;
+import "src/builders/autotools.dart" as Autotools;
+
 import "src/toolchains/crosstool.dart" as CrossTool;
 import "src/toolchains/gcc.dart" as Gcc;
 import "src/toolchains/clang.dart" as Clang;
@@ -18,11 +20,11 @@ part "src/builder/cycle.dart";
 part "src/builder/toolchains.dart";
 
 final List<BuilderProvider> builderProviders = <BuilderProvider>[
-  new CMake.CMakeBuilderProvider()
+  new CMake.CMakeBuilderProvider(),
+  new Autotools.AutotoolsBuilderProvider()
 ];
 
 final List<ToolchainProvider> toolchainProviders = <ToolchainProvider>[
-  new Gcc.GccToolchainProvider(Gcc.GccToolchainProvider.defaultGccPath),
   new Clang.ClangToolchainProvider(Clang.ClangToolchainProvider.defaultClangPath),
   new OsxCross.OsxCrossToolchainProvider(),
   new CrossTool.CrossToolToolchainProvider()
@@ -57,8 +59,12 @@ Future<ToolchainProvider> resolveToolchainProvider(String targetName, [StorageCo
     config = new MockStorageContainer();
   }
 
-  var providers = new List<ToolchainProvider>.from(await loadCustomToolchains());
+  var providers = new List<ToolchainProvider>.from(
+    await loadCustomToolchains()
+  );
+  providers.addAll(await findGccToolchains());
   providers.addAll(toolchainProviders);
+
   for (var provider in providers) {
     var providerName  = await provider.getProviderId();
 

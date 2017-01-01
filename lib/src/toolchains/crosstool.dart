@@ -11,6 +11,8 @@ import "package:legit/legit.dart";
 import "package:legit/io.dart";
 import "package:path/path.dart" as pathlib;
 
+import "gcc.dart" as Gcc;
+
 const String _gitUrl = "https://github.com/crosstool-ng/crosstool-ng.git";
 
 const Map<String, String> crosstoolTargetMap = const {
@@ -294,12 +296,13 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   Future<Toolchain> getToolchain(String target, StorageContainer config) async {
     await crosstool.bootstrap();
 
+    var original = target;
     if (crosstoolTargetMap[target] is String) {
       target = crosstoolTargetMap[target];
     }
 
     var path = await crosstool.getToolchain(target, install: true);
-    var toolchain = new CrossToolToolchain(target, path);
+    var toolchain = new CrossToolToolchain(target, original, path);
 
     return toolchain;
   }
@@ -317,8 +320,9 @@ class CrossToolToolchainProvider extends ToolchainProvider {
 class CrossToolToolchain extends Toolchain {
   final String sample;
   final String path;
+  final String target;
 
-  CrossToolToolchain(this.sample, this.path);
+  CrossToolToolchain(this.sample, this.target, this.path);
 
   @override
   Future applyToBuilder(Builder builder) async {}
@@ -349,5 +353,15 @@ class CrossToolToolchain extends Toolchain {
   Future<Map<String, List<String>>> getEnvironmentVariables() async {
     var m = <String, List<String>>{};
     return m;
+  }
+
+  @override
+  Future<String> getTargetMachine() async {
+    var gcc = new Gcc.GccHelper(await getToolPath("cc"));
+    var machine = await gcc.getTargetMachine();
+    if (isTargetX86_32Bit(target)) {
+      machine = machine.replaceAll("x86_64", "i386");
+    }
+    return machine;
   }
 }

@@ -15,5 +15,7 @@ abstract class Toolchain {
   Future<String> getToolPath(String tool);
   Future<Map<String, List<String>>> getEnvironmentVariables();
 
+  Future<String> getTargetMachine();
+
   Future applyToBuilder(Builder builder);
 }

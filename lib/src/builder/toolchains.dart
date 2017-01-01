@@ -30,3 +30,21 @@ Future<List<ToolchainProvider>> loadCustomToolchains() async {
 
   return providers;
 }
+
+final RegExp _gccExecutablePattern = new RegExp(r"(.+-gcc|gcc)$");
+
+Future<List<ToolchainProvider>> findGccToolchains() async {
+  var providers = <ToolchainProvider>[];
+
+  await for (var exe in findExecutablesMatching(_gccExecutablePattern)) {
+    var gcc = new Gcc.GccToolchainProvider(exe);
+
+    if (!(await gcc.isValidCompiler())) {
+      continue;
+    }
+
+    providers.add(gcc);
+  }
+
+  return providers;
+}

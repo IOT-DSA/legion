@@ -58,6 +58,7 @@ class GccToolchain extends Toolchain {
     }
     return prefix;
   }
+
   @override
   Future<Map<String, List<String>>> getEnvironmentVariables() async {
     var compilers = <String>[];
@@ -71,6 +72,15 @@ class GccToolchain extends Toolchain {
       "CCFLAGS": compilers,
       "ASFLAGS": compilers
     };
+  }
+
+  @override
+  Future<String> getTargetMachine() async {
+    var machine = await gcc.getTargetMachine();
+    if (isTargetX86_32Bit(target)) {
+      machine = machine.replaceAll("x86_64", "i386");
+    }
+    return machine;
   }
 }
 
@@ -122,5 +132,16 @@ class GccToolchainProvider extends ToolchainProvider {
   @override
   Future<String> getProviderDescription() async {
     return "GCC (${path})";
+  }
+
+  Future<bool> isValidCompiler() async {
+    var gcc = new GccHelper(path);
+
+    try {
+      await gcc.getVersion();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

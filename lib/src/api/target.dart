@@ -13,4 +13,37 @@ class Target {
       this.name
     ).getBoolean(name);
   }
+
+  Directory get buildDirectory {
+    if (_buildDirectory == null) {
+      _buildDirectory = new Directory(
+        resolveWorkingPath(
+          "legion/${name}",
+          from: project.directory
+        )
+      );
+
+
+      if (!(_buildDirectory.existsSync())) {
+        _buildDirectory.createSync(recursive: true);
+      }
+    }
+    return _buildDirectory;
+  }
+
+  Future<Directory> ensureCleanBuildDirectory() async {
+    var items = await buildDirectory.list().toList();
+
+    if (items.isEmpty) {
+      return buildDirectory;
+    }
+
+    for (var item in items) {
+      await item.delete(recursive: true);
+    }
+
+    return buildDirectory;
+  }
+
+  Directory _buildDirectory;
 }

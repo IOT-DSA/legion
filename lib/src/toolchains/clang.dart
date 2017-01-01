@@ -77,6 +77,15 @@ class ClangToolchain extends Toolchain {
       "ASFLAGS": compilers
     };
   }
+
+  @override
+  Future<String> getTargetMachine() async {
+    var machine = await clang.getTargetMachine();
+    if (isTargetX86_32Bit(target)) {
+      machine = machine.replaceAll("x86_64", "i386");
+    }
+    return machine;
+  }
 }
 
 class ClangToolchainProvider extends ToolchainProvider {

@@ -157,18 +157,7 @@ class CMakeBuilder extends Builder {
       generator.defineOrAppend("CMAKE_CXX_FLAGS", flag);
     }
 
-    var dir = new Directory(
-      resolveWorkingPath(
-        "legion/${target.name}",
-        from: target.project.directory
-      )
-    );
-
-    if (await dir.exists()) {
-      await dir.delete(recursive: true);
-    }
-
-    await dir.create(recursive: true);
+    var dir = await target.ensureCleanBuildDirectory();
 
     var extraArguments = new List<String>.from(target.extraArguments);
 
@@ -203,16 +192,7 @@ class CMakeBuilder extends Builder {
 
   @override
   Future build() async {
-    var dir = new Directory(
-      resolveWorkingPath(
-        "legion/${target.name}",
-        from: target.project.directory
-      )
-    );
-
-    if (!(await dir.exists())) {
-      throw new LegionError("Build directory not found for target ${target.name}");
-    }
+    var dir = target.buildDirectory;
 
     var cmd = await makeChoiceByFileExistence({
       "Makefile": "make",
