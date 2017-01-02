@@ -4,7 +4,6 @@ import "dart:async";
 import "dart:io";
 
 import "package:legion/api.dart";
-import "package:legion/storage.dart";
 import "package:legion/utils.dart";
 
 import "package:legit/legit.dart";
@@ -71,10 +70,9 @@ class CrossTool {
     );
 
     if (result.exitCode != 0) {
-      reportErrorMessage(
+      throw new LegionError(
         "Failed to bootstrap CrossTool:\n${result.output}".trim()
       );
-      exit(1);
     }
 
     reportStatusMessage("Configuring CrossTool");
@@ -87,8 +85,7 @@ class CrossTool {
     );
 
     if (result.exitCode != 0) {
-      reportErrorMessage("Failed to configure CrossTool:\n${result.output}");
-      exit(1);
+      throw new LegionError("Failed to configure CrossTool:\n${result.output}");
     }
 
     reportStatusMessage("Making CrossTool");
@@ -101,8 +98,7 @@ class CrossTool {
     );
 
     if (result.exitCode != 0) {
-      reportErrorMessage("Failed to make CrossTool:\n${result.output}");
-      exit(1);
+      throw new LegionError("Failed to make CrossTool:\n${result.output}");
     }
   }
 
@@ -185,7 +181,7 @@ class CrossTool {
     var result = await _run([name]);
 
     if (result.exitCode != 0) {
-      throw new Exception(
+      throw new LegionError(
         "Failed to choose sample: ${name}\n${result.output}"
       );
     }
@@ -207,12 +203,10 @@ class CrossTool {
     ], inherit: inherit);
 
     if (result.exitCode != 0) {
-      reportErrorMessage(
+      throw new LegionError(
         "Failed to build toolchain ${_lastToolchainSwitch}" +
           (inherit ? "" : ".\n${result.output}")
       );
-
-      exit(1);
     }
   }
 
@@ -280,7 +274,7 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   Future<String> getProviderId() async => "crosstool";
 
   @override
-  Future<bool> isTargetSupported(String target, StorageContainer config) async {
+  Future<bool> isTargetSupported(String target, Configuration config) async {
     await crosstool.bootstrap();
 
     if (crosstoolTargetMap[target] is String) {
@@ -293,7 +287,7 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   }
 
   @override
-  Future<Toolchain> getToolchain(String target, StorageContainer config) async {
+  Future<Toolchain> getToolchain(String target, Configuration config) async {
     await crosstool.bootstrap();
 
     var original = target;
@@ -316,6 +310,7 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   Future<List<String>> listBasicTargets() async {
     return await crosstoolTargetMap.keys.toList();
   }
+
   @override
   Future<String> getProviderDescription() async {
     return "CrossTool";

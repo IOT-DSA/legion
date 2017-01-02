@@ -1,15 +1,13 @@
 library legion.toolchains.clang;
 
 import "dart:async";
-import "dart:io";
 
 import "package:legion/api.dart";
 import "package:legion/utils.dart";
 
 import "generic_compiler.dart";
-import "package:legion/storage.dart";
 
-const Map<String, String> clangTargetMap = const {
+const Map<String, String> clangTargetMap = const <String, String>{
   "linux-x64": "x86_64-linux-eabi",
   "linux-x86": "x86-linux-eabi",
   "linux-arm": "arm-linux-eabi",
@@ -23,69 +21,9 @@ class ClangHelper extends GenericCompilerHelper {
   ClangHelper(String path) : super(path);
 }
 
-class ClangToolchain extends Toolchain {
-  final String target;
-  final ClangHelper clang;
-
-  ClangToolchain(this.target, this.clang);
-
-  @override
-  Future applyToBuilder(Builder builder) async {
-  }
-
-  @override
-  Future<String> getSystemName() async {
-    return await clang.getSystemName();
-  }
-
-  @override
-  Future<String> getToolPath(String tool) async {
-    var prefix = clang.path;
-    if (prefix.endsWith("-clang") || prefix.endsWith("/clang")) {
-      prefix = prefix.substring(0, prefix.length - 5);
-    } else {
-      prefix = new File(clang.path).parent.absolute.path + "/";
-    }
-
-    if (tool == "cc") {
-      tool = "clang";
-    }
-
-    if (tool == "c++") {
-      tool = "clang++";
-    }
-
-    return "${prefix}${tool}";
-  }
-
-  @override
-  Future<String> getToolchainBase() async {
-    return new File(clang.path).parent.absolute.path;
-  }
-
-  @override
-  Future<Map<String, List<String>>> getEnvironmentVariables() async {
-    var compilers = <String>[];
-
-    if (isTargetX86_32Bit(target)) {
-      compilers.add("-m32");
-    }
-
-    return <String, List<String>>{
-      "CFLAGS": compilers,
-      "CCFLAGS": compilers,
-      "ASFLAGS": compilers
-    };
-  }
-
-  @override
-  Future<String> getTargetMachine() async {
-    var machine = await clang.getTargetMachine();
-    if (isTargetX86_32Bit(target)) {
-      machine = machine.replaceAll("x86_64", "i386");
-    }
-    return machine;
-  }
+class ClangToolchain extends GenericToolchain {
+  ClangToolchain(String target, ClangHelper compiler) :
+      super(target, compiler, "clang", "clang++");
 }
 
 class ClangToolchainProvider extends ToolchainProvider {
@@ -99,14 +37,19 @@ class ClangToolchainProvider extends ToolchainProvider {
   Future<String> getProviderId() async => "clang";
 
   @override
-  Future<Toolchain> getToolchain(String target, StorageContainer config) async {
+  Future<String> getProviderDescription() async {
+    return "Clang (${path})";
+  }
+
+  @override
+  Future<Toolchain> getToolchain(String target, Configuration config) async {
     var clang = new ClangHelper(path);
 
     return new ClangToolchain(target, clang);
   }
 
   @override
-  Future<bool> isTargetSupported(String target, StorageContainer config) async {
+  Future<bool> isTargetSupported(String target, Configuration config) async {
     if (path == null) {
       return false;
     }
@@ -128,8 +71,14 @@ class ClangToolchainProvider extends ToolchainProvider {
     return targets;
   }
 
-  @override
-  Future<String> getProviderDescription() async {
-    return "Clang (${path})";
+  Future<bool> isValidCompiler() async {
+    var clang = new ClangHelper(path);
+
+    try {
+      await clang.getVersion();
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

@@ -498,3 +498,23 @@ dynamic resolveConfigValue(root, String key) {
 
   return _resolve(root, key.split("."));
 }
+
+Map<String, dynamic> _globalConfiguration;
+
+Future<dynamic> readGlobalConfigSetting(String key, [defaultValue]) async {
+  if (_globalConfiguration == null) {
+    var file = getLegionHomeFile("config.json");
+    if (!(await file.exists())) {
+      return defaultValue;
+    }
+    var content = await file.readAsString();
+    _globalConfiguration = JSON.decode(content);
+  }
+
+  var value = resolveConfigValue(_globalConfiguration, key);
+
+  if (value != null) {
+    return defaultValue;
+  }
+  return value;
+}

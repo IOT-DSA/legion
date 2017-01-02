@@ -5,8 +5,8 @@ abstract class ToolchainProvider {
   Future<String> getProviderDescription();
 
   Future<List<String>> listBasicTargets();
-  Future<bool> isTargetSupported(String target, StorageContainer config);
-  Future<Toolchain> getToolchain(String target, StorageContainer config);
+  Future<bool> isTargetSupported(String target, Configuration config);
+  Future<Toolchain> getToolchain(String target, Configuration config);
 }
 
 abstract class Toolchain {

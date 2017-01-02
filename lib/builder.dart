@@ -4,7 +4,6 @@ import "dart:async";
 import "dart:io";
 
 import "api.dart";
-import "storage.dart";
 import "utils.dart";
 
 import "src/builders/cmake.dart" as CMake;
@@ -25,7 +24,6 @@ final List<BuilderProvider> builderProviders = <BuilderProvider>[
 ];
 
 final List<ToolchainProvider> toolchainProviders = <ToolchainProvider>[
-  new Clang.ClangToolchainProvider(Clang.ClangToolchainProvider.defaultClangPath),
   new OsxCross.OsxCrossToolchainProvider(),
   new CrossTool.CrossToolToolchainProvider()
 ];
@@ -54,25 +52,33 @@ executeBuildStages(Directory directory, List<BuildStageExecution> executions) as
   }
 }
 
-Future<ToolchainProvider> resolveToolchainProvider(String targetName, [StorageContainer config]) async {
+Future<List<ToolchainProvider>> loadAllToolchains() async {
+  var toolchainProviderList = <ToolchainProvider>[];
+
+  toolchainProviderList.addAll(await loadCustomToolchains());
+  toolchainProviderList.addAll(await findGccToolchains());
+  toolchainProviderList.addAll(await findClangToolchains());
+  toolchainProviderList.addAll(toolchainProviders);
+
+  return toolchainProviderList;
+}
+
+Future<ToolchainProvider> resolveToolchainProvider(String targetName, [Configuration config]) async {
   if (config == null) {
-    config = new MockStorageContainer();
+    config = new MockConfiguration();
   }
 
-  var providers = new List<ToolchainProvider>.from(
-    await loadCustomToolchains()
-  );
-  providers.addAll(await findGccToolchains());
-  providers.addAll(toolchainProviders);
+  var providers = await loadAllToolchains();
 
   for (var provider in providers) {
-    var providerName  = await provider.getProviderId();
+    var providerName = await provider.getProviderId();
 
+    var tname = targetName;
     if (targetName.startsWith("${providerName}:")) {
-      targetName = targetName.substring("${providerName}:".length);
+      tname = targetName.substring("${providerName}:".length);
     }
 
-    if (await provider.isTargetSupported(targetName, config)) {
+    if (await provider.isTargetSupported(tname, config)) {
       return provider;
     }
   }
@@ -80,9 +86,9 @@ Future<ToolchainProvider> resolveToolchainProvider(String targetName, [StorageCo
   return null;
 }
 
-Future<Toolchain> resolveToolchain(String targetName, [StorageContainer config]) async {
+Future<Toolchain> resolveToolchain(String targetName, [Configuration config]) async {
   if (config == null) {
-    config = new MockStorageContainer();
+    config = new MockConfiguration();
   }
 
   var provider = await resolveToolchainProvider(targetName, config);

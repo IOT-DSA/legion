@@ -10,3 +10,4 @@ part "src/api/project.dart";
 part "src/api/toolchain.dart";
 part "src/api/builder.dart";
 part "src/api/target.dart";
+part "src/api/config.dart";

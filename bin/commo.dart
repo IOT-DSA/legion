@@ -8,6 +8,7 @@ main(List<String> args) async {
 
     toolchainProviderList.addAll(await loadCustomToolchains());
     toolchainProviderList.addAll(await findGccToolchains());
+    toolchainProviderList.addAll(await findClangToolchains());
     toolchainProviderList.addAll(toolchainProviders);
 
     reportStatusMessage("Supported Builders");

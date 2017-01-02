@@ -3,7 +3,6 @@ library legion.toolchains.osxcross;
 import "dart:async";
 import "dart:io";
 
-import "package:legion/storage.dart";
 import "package:legit/legit.dart";
 
 import "package:legion/io.dart";
@@ -69,7 +68,7 @@ class OsxCrossToolchainProvider extends ToolchainProvider {
   Future<String> getProviderId() async => "osxcross";
 
   @override
-  Future<Toolchain> getToolchain(String target, StorageContainer config) async {
+  Future<Toolchain> getToolchain(String target, Configuration config) async {
     await _bootstrap();
     var path = "${_getGitDir().path}/target/bin/x86_64-apple-darwin12-clang";
     var helper = new ClangHelper(path);
@@ -78,7 +77,7 @@ class OsxCrossToolchainProvider extends ToolchainProvider {
   }
 
   @override
-  Future<bool> isTargetSupported(String target, StorageContainer config) async {
+  Future<bool> isTargetSupported(String target, Configuration config) async {
     return (await listBasicTargets()).contains(target);
   }
 

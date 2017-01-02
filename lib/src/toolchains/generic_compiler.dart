@@ -3,7 +3,9 @@ library legion.toolchains.generic_compiler;
 import "dart:async";
 import "dart:io";
 
+import "package:legion/api.dart";
 import "package:legion/io.dart";
+import "package:legion/utils.dart";
 
 class GenericCompilerHelper {
   final String path;
@@ -113,5 +115,78 @@ class GenericCompilerHelper {
     }
 
     return names;
+  }
+}
+
+class GenericToolchain extends Toolchain {
+  final String target;
+  final GenericCompilerHelper compiler;
+  final String cc;
+  final String cxx;
+
+  GenericToolchain(this.target, this.compiler, this.cc, this.cxx);
+
+  @override
+  Future applyToBuilder(Builder builder) async {
+  }
+
+  @override
+  Future<String> getSystemName() async {
+    return await compiler.getSystemName();
+  }
+
+  @override
+  Future<String> getToolPath(String tool) async {
+    var prefix = compiler.path;
+    if (prefix.endsWith("-${cc}") || prefix.endsWith("/${cc}")) {
+      prefix = prefix.substring(0, prefix.length - cc.length);
+    } else {
+      prefix = new File(compiler.path).parent.absolute.path + "/";
+    }
+
+    if (tool == "cc") {
+      tool = cc;
+    }
+
+    if (tool == "c++") {
+      tool = cxx;
+    }
+
+    return "${prefix}${tool}";
+  }
+
+  @override
+  Future<String> getToolchainBase() async {
+    var prefix = compiler.path;
+    if (prefix.endsWith("-${cc}") || prefix.endsWith("/${cc}")) {
+      prefix = prefix.substring(0, prefix.length - 4);
+    } else {
+      prefix = new File(compiler.path).parent.absolute.path;
+    }
+    return prefix;
+  }
+
+  @override
+  Future<Map<String, List<String>>> getEnvironmentVariables() async {
+    var compilers = <String>[];
+
+    if (isTargetX86_32Bit(target)) {
+      compilers.add("-m32");
+    }
+
+    return <String, List<String>>{
+      "CFLAGS": compilers,
+      "CCFLAGS": compilers,
+      "ASFLAGS": compilers
+    };
+  }
+
+  @override
+  Future<String> getTargetMachine() async {
+    var machine = await compiler.getTargetMachine();
+    if (isTargetX86_32Bit(target)) {
+      machine = machine.replaceAll("x86_64", "i386");
+    }
+    return machine;
   }
 }

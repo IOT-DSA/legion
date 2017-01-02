@@ -33,8 +33,8 @@ Map generateNormalCMakeToolchain(
     "CMAKE_CXX_COMPILER": cpp
   };
 
-  var cflags = [];
-  var cxxflags = [];
+  var cflags = <String>[];
+  var cxxflags = <String>[];
 
   map["CMAKE_C_FLAGS"] = cflags.join(" ");
   map["CMAKE_CXX_FLAGS"] = cxxflags.join(" ");

@@ -1,6 +1,6 @@
 part of legion.api;
 
-class Project {
+class Project implements Configuration {
   final Directory directory;
 
   Storage _config;
@@ -33,10 +33,12 @@ class Project {
     return new Target(this, name, toolchain, extraArguments);
   }
 
+  @override
   Future<dynamic> getSetting(String key) async {
     return resolveConfigValue(config.entries, key);
   }
 
+  @override
   Future<List<String>> getStringListSetting(String key) async {
     var value = resolveConfigValue(config.entries, key);
     if (value is List) {
@@ -45,6 +47,7 @@ class Project {
     return const <String>[];
   }
 
+  @override
   Future<Map<String, dynamic>> getMapSetting(String key) async {
     var value = resolveConfigValue(config.entries, key);
     if (value is Map) {
@@ -53,10 +56,12 @@ class Project {
     return const <String, dynamic>{};
   }
 
+  @override
   Future<bool> getBooleanSetting(String key) async {
     return resolveConfigValue(config.entries, key) == true;
   }
 
+  @override
   Future<String> getStringSetting(String key, [String defaultValue = ""]) async {
     var str = resolveConfigValue(config.entries, key);
 

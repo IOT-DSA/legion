@@ -72,24 +72,24 @@ class ProcessAdapterReferences {
 
 Future<BetterProcessResult> executeCommand(String executable,
   {
-  List<String> args: const [],
-  String workingDirectory,
-  Map<String, String> environment,
-  bool includeParentEnvironment: true,
-  bool runInShell: false,
-  stdin,
-  ProcessHandler handler,
-  OutputHandler stdoutHandler,
-  OutputHandler stderrHandler,
-  OutputHandler outputHandler,
-  File outputFile,
-  bool inherit: false,
-  bool writeToBuffer: false,
-  bool binary: false,
-  ProcessResultHandler resultHandler,
-  bool inheritStdin: false,
-  LogHandler logHandler,
-  bool pty: false
+    List<String> args: const [],
+    String workingDirectory,
+    Map<String, String> environment,
+    bool includeParentEnvironment: true,
+    bool runInShell: false,
+    stdin,
+    ProcessHandler handler,
+    OutputHandler stdoutHandler,
+    OutputHandler stderrHandler,
+    OutputHandler outputHandler,
+    File outputFile,
+    bool inherit: false,
+    bool writeToBuffer: false,
+    bool binary: false,
+    ProcessResultHandler resultHandler,
+    bool inheritStdin: false,
+    LogHandler logHandler,
+    bool pty: false
   }) async {
   if (pty && !Platform.isWindows) {
     var rcmd = executable;
