@@ -320,7 +320,7 @@ String findExecutableSync(String name) {
 
   for (var p in paths) {
     if (Platform.environment.containsKey("HOME")) {
-      p = p.replaceAll("~/", Platform.environment["HOME"]);
+      p = p.replaceAll("~/", Platform.environment["HOME"] + "/");
     }
 
     var dir = new Directory(pathlib.normalize(p));
@@ -358,14 +358,25 @@ bool getBooleanEnvSetting(String name) {
   return false;
 }
 
-List<List<String>> splitExtraArguments(List<String> args) {
+List<List<String>> splitExtraArguments(List<String> args, [int split = 0]) {
   var out = <List<String>>[];
 
   var list = <String>[];
-  for (var arg in args) {
-    if (arg == "--") {
+  for (var i = 0; i < args.length; i++) {
+    var arg = args[i];
+
+    if (split > 0 && out.length >= split) {
+      if (out.isEmpty) {
+        list.add(arg);
+      } else {
+        out.last.add(arg);
+      }
+    } else if (arg == "--") {
       out.add(list);
       list = <String>[];
+      if (split > 0 && out.length >= split) {
+        i--;
+      }
     } else {
       list.add(arg);
     }

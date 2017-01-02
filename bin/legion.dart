@@ -9,7 +9,12 @@ import "package:legion/utils.dart";
 main(List<String> args) async {
   if (args.isEmpty) {
     print("Usage: legion <command> [args]");
-    exit(0);
+    print("Commands:");
+    print("  brigade: Generate Targets");
+    print("  war: Generate and Build Targets");
+    print("  commo: Show Builders and Toolchains");
+    print("  foxhole: Generate Toolchain Environment");
+    return null;
   }
 
   String cmd = args[0];
@@ -22,7 +27,23 @@ main(List<String> args) async {
   } else if (cmd == "assemble" || cmd == "dist") {
     return await Assemble.main(argv);
   } else if (cmd == "quick" || cmd == "qbuild" || cmd == "war") {
-    await Brigade.main(argv);
+    var sections = splitExtraArguments(argv);
+    var brigadeArgs = <String>[];
+    if (sections.length >= 1) {
+      brigadeArgs.addAll(sections[0]);
+    }
+
+    if (sections.length >= 2) {
+      brigadeArgs.addAll(sections[1]);
+    }
+
+    var buildArgs = <String>[];
+
+    if (sections.length >= 3) {
+      buildArgs.addAll(sections[2]);
+    }
+
+    await Brigade.main(brigadeArgs);
 
     if (GlobalState.hasError) {
       return null;
@@ -31,13 +52,23 @@ main(List<String> args) async {
     var platoonArgString = Platform.environment["LEGION_BUILD_ARGS"];
     var platoonArgs = <String>[];
 
+    if (sections.length >= 1) {
+      platoonArgs.addAll(sections[0]);
+    }
+
+    if (buildArgs.isNotEmpty) {
+      platoonArgs.add("--");
+      platoonArgs.addAll(buildArgs);
+    }
+
     if (platoonArgString is String) {
       platoonArgs.addAll(platoonArgString.split(" "));
     }
 
-    await Platoon.main(platoonArgs);
+    return await Platoon.main(platoonArgs);
   } else {
     print("Unknown Command: ${cmd}");
-    exit(1);
+    exitCode = 1;
+    return null;
   }
 }
