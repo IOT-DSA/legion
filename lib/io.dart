@@ -109,7 +109,7 @@ Future<BetterProcessResult> executeCommand(String executable,
       args.addAll(rargs);
     } else {
       args.addAll(<String>[
-        "-qfc",
+        "-qefc",
         escapeShellArguments(rcmd, rargs),
         "/dev/null"
       ]);

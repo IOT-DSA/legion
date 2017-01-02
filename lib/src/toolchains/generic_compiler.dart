@@ -127,10 +127,6 @@ class GenericToolchain extends Toolchain {
   GenericToolchain(this.target, this.compiler, this.cc, this.cxx);
 
   @override
-  Future applyToBuilder(Builder builder) async {
-  }
-
-  @override
   Future<String> getSystemName() async {
     return await compiler.getSystemName();
   }
