@@ -4,12 +4,7 @@ import "package:legion/utils.dart";
 
 main(List<String> args) async {
   try {
-    var toolchainProviderList = <ToolchainProvider>[];
-
-    toolchainProviderList.addAll(await loadCustomToolchains());
-    toolchainProviderList.addAll(await findGccToolchains());
-    toolchainProviderList.addAll(await findClangToolchains());
-    toolchainProviderList.addAll(toolchainProviders);
+    var toolchainProviderList = await loadAllToolchains();
 
     reportStatusMessage("Supported Builders");
     for (var provider in builderProviders) {
