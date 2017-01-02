@@ -114,6 +114,16 @@ Future<BetterProcessResult> executeCommand(String executable,
         "/dev/null"
       ]);
     }
+
+    if (environment != null) {
+      environment = new Map<String, String>.from(environment);
+    } else {
+      environment = {};
+    }
+
+    if (environment["TERM"] is! String) {
+      environment["TERM"] = "xterm";
+    }
   }
 
   ProcessAdapterReferences refs = Zone.current["legion.io.process.ref"];
@@ -124,6 +134,7 @@ Future<BetterProcessResult> executeCommand(String executable,
   }
 
   IOSink raf;
+  StreamSubscription stdinSub;
 
   if (outputFile != null) {
     if (!(await outputFile.exists())) {
@@ -256,7 +267,7 @@ Future<BetterProcessResult> executeCommand(String executable,
         await process.stdin.close();
       }
     } else if (inheritStdin) {
-      _stdin.listen(process.stdin.add, onDone: process.stdin.close);
+      stdinSub = _stdin.listen(process.stdin.add, onDone: process.stdin.close);
     }
 
     var code = await process.exitCode;
@@ -293,6 +304,10 @@ Future<BetterProcessResult> executeCommand(String executable,
 
     return result;
   } finally {
+    if (stdinSub != null) {
+      stdinSub.cancel();
+    }
+
     if (raf != null) {
       await raf.flush();
       await raf.close();
