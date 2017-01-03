@@ -1,6 +1,5 @@
 {
   "cmake": {
-    "generator": "Ninja",
     "verbose": true
   }
 }
