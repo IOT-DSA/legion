@@ -72,8 +72,15 @@ class BuildCycle {
         }
 
         reportStatusMessage("Generated target ${builder.target.name}");
-      } catch (e) {
-        reportErrorMessage(e.toString());
+      } catch (e, stack) {
+        var msg = e.toString();
+
+        if (e is! LegionError) {
+          msg += "\n${stack}";
+        }
+
+        reportErrorMessage(msg);
+
         if (project.state.isInList("targets", builder.target.name)) {
           project.state.removeFromList("targets", builder.target.name);
         }
@@ -87,8 +94,14 @@ class BuildCycle {
       try {
         await builder.build();
         reportStatusMessage("Built target ${builder.target.name}");
-      } catch (e) {
-        reportErrorMessage(e.toString());
+      } catch (e, stack) {
+        var msg = e.toString();
+
+        if (e is! LegionError) {
+          msg += "\n${stack}";
+        }
+
+        reportErrorMessage(msg);
       }
     }
   }

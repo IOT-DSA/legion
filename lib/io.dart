@@ -6,7 +6,7 @@ import "dart:io";
 
 import "utils.dart";
 
-typedef ProcessResultHandler(BetterProcessResult result);
+typedef ProcessResultHandler(ExecutionResult result);
 typedef ProcessHandler(Process process);
 typedef OutputHandler(String string);
 typedef ProcessAdapterHandler(ProcessAdapterReferences adapter);
@@ -14,10 +14,10 @@ typedef LogHandler(String message);
 
 Stdin get _stdin => stdin;
 
-class BetterProcessResult extends ProcessResult {
+class ExecutionResult extends ProcessResult {
   final String output;
 
-  BetterProcessResult(int pid, int exitCode, stdout, stderr, this.output)
+  ExecutionResult(int pid, int exitCode, stdout, stderr, this.output)
     : super(pid, exitCode, stdout, stderr);
 }
 
@@ -28,15 +28,15 @@ class ProcessAdapterFlags {
 }
 
 class ProcessAdapterReferences {
-  BetterProcessResult result;
+  ExecutionResult result;
   Process process;
   ProcessAdapterFlags flags = new ProcessAdapterFlags();
 
-  Future<BetterProcessResult> get onResultReady {
+  Future<ExecutionResult> get onResultReady {
     if (result != null) {
       return new Future.value(result);
     } else {
-      var c = new Completer<BetterProcessResult>();
+      var c = new Completer<ExecutionResult>();
       _onResultReady.add(c.complete);
       return c.future;
     }
@@ -62,7 +62,7 @@ class ProcessAdapterReferences {
     }
   }
 
-  void pushResult(BetterProcessResult result) {
+  void pushResult(ExecutionResult result) {
     this.result = result;
     while (_onResultReady.isNotEmpty) {
       _onResultReady.removeAt(0)(result);
@@ -70,7 +70,7 @@ class ProcessAdapterReferences {
   }
 }
 
-Future<BetterProcessResult> executeCommand(String executable,
+Future<ExecutionResult> executeCommand(String executable,
   {
     List<String> args: const [],
     String workingDirectory,
@@ -286,7 +286,7 @@ Future<BetterProcessResult> executeCommand(String executable,
       logHandler("[${_currentTimestamp}][${id}] == Exited with status ${code} ==");
     }
 
-    var result = new BetterProcessResult(
+    var result = new ExecutionResult(
       pid,
       code,
       binary ? sbytes : ob.toString(),

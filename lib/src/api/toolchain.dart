@@ -12,8 +12,20 @@ abstract class ToolchainProvider {
 abstract class Toolchain {
   Future<String> getToolchainBase();
   Future<String> getSystemName();
-  Future<String> getToolPath(String tool);
   Future<Map<String, List<String>>> getEnvironmentVariables();
 
   Future<String> getTargetMachine();
+
+  Future<String> getToolPath(String tool);
+  Future<Tool> getTool(String tool);
+
+  Future<CompilerTool> getCompilerTool(String toolName) async {
+    var tool = await getTool(toolName);
+
+    if (tool is CompilerTool) {
+      return tool;
+    }
+
+    throw new Exception("Expected tool '${toolName}' to be a compiler.");
+  }
 }

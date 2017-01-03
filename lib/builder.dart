@@ -8,6 +8,7 @@ import "utils.dart";
 
 import "src/builders/cmake.dart" as CMake;
 import "src/builders/autotools.dart" as Autotools;
+import "src/builders/boost_build.dart" as BoostBuild;
 
 import "src/toolchains/crosstool.dart" as CrossTool;
 import "src/toolchains/gcc.dart" as Gcc;
@@ -20,7 +21,8 @@ part "src/builder/toolchains.dart";
 
 final List<BuilderProvider> builderProviders = <BuilderProvider>[
   new CMake.CMakeBuilderProvider(),
-  new Autotools.AutotoolsBuilderProvider()
+  new Autotools.AutotoolsBuilderProvider(),
+  new BoostBuild.BootBuilderProvider()
 ];
 
 final List<ToolchainProvider> toolchainProviders = <ToolchainProvider>[

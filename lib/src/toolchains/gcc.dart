@@ -7,13 +7,22 @@ import "package:legion/utils.dart";
 
 import "generic_compiler.dart";
 
-class GccHelper extends GenericCompilerHelper {
-  GccHelper(String path) : super(path);
+class GccTool extends GenericCompilerTool {
+  GccTool(String path) : super(path);
+
+  @override
+  Future<String> getCompilerId() async {
+    return "GCC";
+  }
 }
 
 class GccToolchain extends GenericToolchain {
-  GccToolchain(String target, GccHelper compiler) :
+  GccToolchain(String target, GccTool compiler) :
       super(target, compiler, "gcc", "g++");
+
+  @override
+  Future<GenericCompilerTool> getCompilerWrapper(String path) async =>
+    new GccTool(path);
 }
 
 class GccToolchainProvider extends ToolchainProvider {
@@ -37,7 +46,7 @@ class GccToolchainProvider extends ToolchainProvider {
       return null;
     }
 
-    var gcc = new GccHelper(path);
+    var gcc = new GccTool(path);
 
     return new GccToolchain(target, gcc);
   }
@@ -48,7 +57,7 @@ class GccToolchainProvider extends ToolchainProvider {
       return false;
     }
 
-    var gcc = new GccHelper(path);
+    var gcc = new GccTool(path);
     var targets = await gcc.getTargetNames();
 
     return targets.contains(target);
@@ -60,14 +69,14 @@ class GccToolchainProvider extends ToolchainProvider {
       return const <String>[];
     }
 
-    var gcc = new GccHelper(path);
+    var gcc = new GccTool(path);
     var targets = await gcc.getTargetNames(basic: true);
 
     return targets;
   }
 
   Future<bool> isValidCompiler() async {
-    var gcc = new GccHelper(path);
+    var gcc = new GccTool(path);
 
     try {
       await gcc.getVersion();

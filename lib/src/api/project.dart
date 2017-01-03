@@ -77,6 +77,15 @@ class Project implements Configuration {
     return new File(filePath);
   }
 
+  Future<File> getFileFromPossibilities(List<String> names) async {
+    for (var file in names.map(getFile)) {
+      if (await file.exists()) {
+        return file;
+      }
+    }
+    return null;
+  }
+
   Future<bool> hasFile(String path) async {
     return await getFile(path).exists();
   }

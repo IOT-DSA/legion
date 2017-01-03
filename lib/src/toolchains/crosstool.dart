@@ -296,7 +296,7 @@ class CrossToolToolchainProvider extends ToolchainProvider {
     }
 
     var path = await crosstool.getToolchain(target, install: true);
-    var gcc = new Gcc.GccHelper("${path}-gcc");
+    var gcc = new Gcc.GccTool("${path}-gcc");
 
     var toolchain = new Gcc.GccToolchain(
       original,

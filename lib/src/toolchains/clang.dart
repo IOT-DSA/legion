@@ -17,13 +17,22 @@ const Map<String, String> clangTargetMap = const <String, String>{
   "mac-x86": "x86-apple-darwin-eabi"
 };
 
-class ClangHelper extends GenericCompilerHelper {
-  ClangHelper(String path) : super(path);
+class ClangTool extends GenericCompilerTool {
+  ClangTool(String path) : super(path);
+
+  @override
+  Future<String> getCompilerId() async {
+    return "Clang";
+  }
 }
 
 class ClangToolchain extends GenericToolchain {
-  ClangToolchain(String target, ClangHelper compiler) :
+  ClangToolchain(String target, ClangTool compiler) :
       super(target, compiler, "clang", "clang++");
+
+  @override
+  Future<GenericCompilerTool> getCompilerWrapper(String path) async =>
+    new ClangTool(path);
 }
 
 class ClangToolchainProvider extends ToolchainProvider {
@@ -43,7 +52,7 @@ class ClangToolchainProvider extends ToolchainProvider {
 
   @override
   Future<Toolchain> getToolchain(String target, Configuration config) async {
-    var clang = new ClangHelper(path);
+    var clang = new ClangTool(path);
 
     return new ClangToolchain(target, clang);
   }
@@ -54,7 +63,7 @@ class ClangToolchainProvider extends ToolchainProvider {
       return false;
     }
 
-    var clang = new ClangHelper(path);
+    var clang = new ClangTool(path);
     var targets = await clang.getTargetNames();
 
     return targets.contains(target);
@@ -66,13 +75,13 @@ class ClangToolchainProvider extends ToolchainProvider {
       return const <String>[];
     }
 
-    var clang = new ClangHelper(path);
+    var clang = new ClangTool(path);
     var targets = await clang.getTargetNames(basic: true);
     return targets;
   }
 
   Future<bool> isValidCompiler() async {
-    var clang = new ClangHelper(path);
+    var clang = new ClangTool(path);
 
     try {
       await clang.getVersion();

@@ -71,7 +71,7 @@ class OsxCrossToolchainProvider extends ToolchainProvider {
   Future<Toolchain> getToolchain(String target, Configuration config) async {
     await _bootstrap();
     var path = "${_getGitDir().path}/target/bin/x86_64-apple-darwin12-clang";
-    var helper = new ClangHelper(path);
+    var helper = new ClangTool(path);
 
     return new ClangToolchain(target, helper);
   }

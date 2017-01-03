@@ -7,20 +7,41 @@ import "package:legion/api.dart";
 import "package:legion/io.dart";
 import "package:legion/utils.dart";
 
-class GenericCompilerHelper {
+class GenericTool extends Tool {
   final String path;
 
-  GenericCompilerHelper(this.path);
+  GenericTool(this.path);
 
+  @override
   Future<bool> exists() async {
-    var file = new File(path);
-    return await file.exists();
+    return await new File(path).exists();
   }
 
+  @override
+  Future<ExecutionResult> run(List<String> args, {
+  String workingDir,
+  bool inherit: false,
+  bool writeToBuffer: true,
+  bool pty: false
+  }) async {
+    return await executeCommand(
+      path,
+      args: args,
+      workingDirectory: workingDir,
+      inherit: inherit,
+      writeToBuffer: writeToBuffer,
+      pty: pty
+    );
+  }
+}
+
+class GenericCompilerTool extends GenericTool implements CompilerTool {
+  GenericCompilerTool(String path) : super(path);
+
   Future<String> getVersion() async {
-    var result = await executeCommand(path, args: [
+    var result = await run(<String>[
       "-dumpversion"
-    ], writeToBuffer: true);
+    ]);
 
     if (result.exitCode != 0) {
       throw new Exception(
@@ -31,10 +52,11 @@ class GenericCompilerHelper {
     return result.stdout.toString().trim();
   }
 
+  @override
   Future<String> getTargetMachine() async {
-    var result = await executeCommand(path, args: [
+    var result = await run(<String>[
       "-dumpmachine"
-    ], writeToBuffer: true);
+    ]);
 
     if (result.exitCode != 0) {
       throw new Exception(
@@ -116,11 +138,16 @@ class GenericCompilerHelper {
 
     return names;
   }
+
+  @override
+  Future<String> getCompilerId() async {
+    return "Unknown";
+  }
 }
 
-class GenericToolchain extends Toolchain {
+abstract class GenericToolchain extends Toolchain {
   final String target;
-  final GenericCompilerHelper compiler;
+  final GenericCompilerTool compiler;
   final String cc;
   final String cxx;
 
@@ -184,5 +211,20 @@ class GenericToolchain extends Toolchain {
       machine = machine.replaceAll("x86_64", "i386");
     }
     return machine;
+  }
+
+  @override
+  Future<Tool> getTool(String tool) async {
+    var path = await getToolPath(tool);
+
+    if (tool == "cc" || tool == "c++") {
+      return await getCompilerWrapper(path);
+    }
+
+    return new GenericTool(path);
+  }
+
+  Future<GenericCompilerTool> getCompilerWrapper(String path) async {
+    return new GenericCompilerTool(path);
   }
 }
