@@ -1,7 +1,6 @@
 part of legion.api;
 
-abstract class BuilderProvider {
-  Future<String> getProviderName();
+abstract class BuilderProvider implements Provider {
   Future<bool> isProjectSupported(Project project);
   Future<Builder> create(Target target);
 }

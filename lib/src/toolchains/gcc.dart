@@ -28,17 +28,17 @@ class GccToolchain extends GenericToolchain {
 class GccToolchainProvider extends ToolchainProvider {
   static final String defaultGccPath = findExecutableSync("gcc");
 
+  final String id;
   final String path;
 
-  GccToolchainProvider(this.path);
+  GccToolchainProvider(this.id, this.path);
 
   @override
-  Future<String> getProviderId() async => "gcc";
-
-  @override
-  Future<String> getProviderDescription() async {
-    return "GCC (${path})";
-  }
+  Future<ProviderDescription> describe() async => new ProviderDescription(
+    id,
+    "gcc",
+    "GCC (${path})"
+  );
 
   @override
   Future<Toolchain> getToolchain(String target, Configuration config) async {

@@ -140,12 +140,15 @@ class BoostBuilder extends Builder {
 
 class BootBuilderProvider extends BuilderProvider {
   @override
+  Future<ProviderDescription> describe() async => new ProviderDescription.generic(
+    "boost-build",
+    "Boost.Build"
+  );
+
+  @override
   Future<Builder> create(Target target) async {
     return new BoostBuilder(target);
   }
-
-  @override
-  Future<String> getProviderName() async => "boost-build";
 
   @override
   Future<bool> isProjectSupported(Project project) async {

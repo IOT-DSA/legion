@@ -73,11 +73,11 @@ Future<ToolchainProvider> resolveToolchainProvider(String targetName, [Configura
   var providers = await loadAllToolchains();
 
   for (var provider in providers) {
-    var providerName = await provider.getProviderId();
+    var info = await provider.describe();
 
     var tname = targetName;
-    if (targetName.startsWith("${providerName}:")) {
-      tname = targetName.substring("${providerName}:".length);
+    if (targetName.startsWith("${info.id}:")) {
+      tname = targetName.substring("${info.id}:".length);
     }
 
     if (await provider.isTargetSupported(tname, config)) {

@@ -1,9 +1,6 @@
 part of legion.api;
 
-abstract class ToolchainProvider {
-  Future<String> getProviderId();
-  Future<String> getProviderDescription();
-
+abstract class ToolchainProvider implements Provider {
   Future<List<String>> listBasicTargets();
   Future<bool> isTargetSupported(String target, Configuration config);
   Future<Toolchain> getToolchain(String target, Configuration config);

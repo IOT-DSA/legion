@@ -1,5 +1,4 @@
 import "package:legion/builder.dart";
-import "package:legion/api.dart";
 import "package:legion/utils.dart";
 
 main(List<String> args) async {
@@ -8,9 +7,9 @@ main(List<String> args) async {
 
     reportStatusMessage("Supported Builders");
     for (var provider in builderProviders) {
-      var name = await provider.getProviderName();
+      var info = await provider.describe();
       GlobalState.currentStatusLevel++;
-      reportStatusMessage("${name}");
+      reportStatusMessage("${info.description}");
       GlobalState.currentStatusLevel--;
     }
 
@@ -18,12 +17,12 @@ main(List<String> args) async {
 
     for (var provider in toolchainProviderList) {
       GlobalState.currentStatusLevel++;
-      var name = await provider.getProviderDescription();
+      var info = await provider.describe();
       var targets = await provider.listBasicTargets();
       if (targets.isEmpty) {
-        reportStatusMessage("${name} (No Targets Available)");
+        reportStatusMessage("${info.description} (No Targets Available)");
       } else {
-        reportStatusMessage("${name}");
+        reportStatusMessage("${info.description}");
         for (var target in targets) {
           GlobalState.currentStatusLevel++;
           reportStatusMessage("${target}");

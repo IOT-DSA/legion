@@ -102,12 +102,15 @@ class AutotoolsBuilder extends Builder {
 
 class AutotoolsBuilderProvider extends BuilderProvider {
   @override
+  Future<ProviderDescription> describe() async => new ProviderDescription.generic(
+    "autotools",
+    "GNU Autotools"
+  );
+
+  @override
   Future<Builder> create(Target target) async {
     return new AutotoolsBuilder(target);
   }
-
-  @override
-  Future<String> getProviderName() async => "autotools";
 
   @override
   Future<bool> isProjectSupported(Project project) async {

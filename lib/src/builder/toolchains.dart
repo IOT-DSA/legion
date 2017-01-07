@@ -18,11 +18,13 @@ Future<List<ToolchainProvider>> loadCustomToolchains() async {
     ToolchainProvider provider;
 
     if (type == "gcc") {
-      provider = new Gcc.GccToolchainProvider(path);
+      provider = new Gcc.GccToolchainProvider(toolchainName, path);
     } else if (type == "clang") {
-      provider = new Clang.ClangToolchainProvider(path);
+      provider = new Clang.ClangToolchainProvider(toolchainName, path);
     } else {
-      throw new LegionError("Unknown custom toolchain type '${type}' for ${toolchainName}");
+      throw new LegionError(
+        "Unknown custom toolchain type '${type}' for ${toolchainName}"
+      );
     }
 
     providers.add(provider);
@@ -48,7 +50,7 @@ Future<List<ToolchainProvider>> findGccToolchains() async {
   }
 
   await for (var exe in findExecutablesMatching(_gccExecutablePattern)) {
-    var gcc = new Gcc.GccToolchainProvider(exe);
+    var gcc = new Gcc.GccToolchainProvider(exe, exe);
 
     if (!(await gcc.isValidCompiler())) {
       continue;
@@ -78,7 +80,7 @@ Future<List<ToolchainProvider>> findClangToolchains() async {
   }
 
   await for (var exe in findExecutablesMatching(_clangExecutablePattern)) {
-    var clang = new Clang.ClangToolchainProvider(exe);
+    var clang = new Clang.ClangToolchainProvider(exe, exe);
 
     if (!(await clang.isValidCompiler())) {
       continue;

@@ -19,10 +19,10 @@ class GenericTool extends Tool {
 
   @override
   Future<ExecutionResult> run(List<String> args, {
-  String workingDir,
-  bool inherit: false,
-  bool writeToBuffer: true,
-  bool pty: false
+    String workingDir,
+    bool inherit: false,
+    bool writeToBuffer: true,
+    bool pty: false
   }) async {
     return await executeCommand(
       path,
@@ -182,7 +182,7 @@ abstract class GenericToolchain extends Toolchain {
   Future<String> getToolchainBase() async {
     var prefix = compiler.path;
     if (prefix.endsWith("-${cc}") || prefix.endsWith("/${cc}")) {
-      prefix = prefix.substring(0, prefix.length - 4);
+      prefix = prefix.substring(0, prefix.length - (cc.length + 1));
     } else {
       prefix = new File(compiler.path).parent.absolute.path;
     }

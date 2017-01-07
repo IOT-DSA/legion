@@ -38,17 +38,17 @@ class ClangToolchain extends GenericToolchain {
 class ClangToolchainProvider extends ToolchainProvider {
   static final String defaultClangPath = findExecutableSync("clang");
 
+  final String id;
   final String path;
 
-  ClangToolchainProvider(this.path);
+  ClangToolchainProvider(this.id, this.path);
 
   @override
-  Future<String> getProviderId() async => "clang";
-
-  @override
-  Future<String> getProviderDescription() async {
-    return "Clang (${path})";
-  }
+  Future<ProviderDescription> describe() async => new ProviderDescription(
+    id,
+    "clang",
+    "Clang (${path})"
+  );
 
   @override
   Future<Toolchain> getToolchain(String target, Configuration config) async {

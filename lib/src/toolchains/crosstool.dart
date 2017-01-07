@@ -271,7 +271,10 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   final CrossTool crosstool = new CrossTool();
 
   @override
-  Future<String> getProviderId() async => "crosstool";
+  Future<ProviderDescription> describe() async => new ProviderDescription.generic(
+    "crosstool",
+    "CrossTool"
+  );
 
   @override
   Future<bool> isTargetSupported(String target, Configuration config) async {
@@ -309,10 +312,5 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   @override
   Future<List<String>> listBasicTargets() async {
     return await crosstoolTargetMap.keys.toList();
-  }
-
-  @override
-  Future<String> getProviderDescription() async {
-    return "CrossTool";
   }
 }

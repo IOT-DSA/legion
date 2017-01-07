@@ -227,9 +227,10 @@ class CMakeBuilder extends Builder {
 
 class CMakeBuilderProvider extends BuilderProvider {
   @override
-  Future<String> getProviderName() async {
-    return "cmake";
-  }
+  Future<ProviderDescription> describe() async => new ProviderDescription.generic(
+    "cmake",
+    "CMake"
+  );
 
   @override
   Future<bool> isProjectSupported(Project project) async {

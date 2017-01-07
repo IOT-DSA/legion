@@ -15,6 +15,12 @@ import "clang.dart";
 const String _gitUrl = "https://github.com/IOT-DSA/osxcross.git";
 
 class OsxCrossToolchainProvider extends ToolchainProvider {
+  @override
+  Future<ProviderDescription> describe() async => new ProviderDescription.generic(
+    "osxcross",
+    "OSXCross"
+  );
+
   _bootstrap({bool force: false}) async {
     if (!force) {
       if (await getLegionHomeFile("osxcross/target/bin/x86_64-apple-darwin12-ld").exists()) {
@@ -60,12 +66,6 @@ class OsxCrossToolchainProvider extends ToolchainProvider {
   }
 
   Directory _gitDir;
-
-  @override
-  Future<String> getProviderDescription() async => "OSXCross";
-
-  @override
-  Future<String> getProviderId() async => "osxcross";
 
   @override
   Future<Toolchain> getToolchain(String target, Configuration config) async {
