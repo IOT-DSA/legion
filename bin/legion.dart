@@ -1,12 +1,16 @@
 import "brigade.dart" as Brigade;
 import "platoon.dart" as Platoon;
 import "assemble.dart" as Assemble;
+import "intel.dart" as Intel;
+import "foxhole.dart" as Foxhole;
 
 import "dart:io";
 
-import "package:legion/utils.dart";
+import "package:legion/tool.dart";
 
 main(List<String> args) async {
+  await loadPlugins();
+
   if (args.isEmpty) {
     print("Usage: legion <command> [args]");
     print("Commands:");
@@ -66,6 +70,10 @@ main(List<String> args) async {
     }
 
     return await Platoon.main(platoonArgs);
+  } else if (cmd == "commo" || cmd == "info" || cmd == "intel") {
+    return await Intel.main(argv);
+  } else if (cmd == "foxhole" || cmd == "env" || cmd == "toolchain") {
+    return await Foxhole.main(argv);
   } else {
     print("Unknown Command: ${cmd}");
     exitCode = 1;

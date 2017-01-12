@@ -10,6 +10,12 @@ class ProviderDescription {
   factory ProviderDescription.generic(String id, String description) {
     return new ProviderDescription(id, id, description);
   }
+
+  Map<String, dynamic> encode() => {
+    "id": id,
+    "type": type,
+    "description": description
+  };
 }
 
 abstract class Provider {

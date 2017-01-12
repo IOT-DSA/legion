@@ -1,10 +1,13 @@
 import "dart:io";
 
+import "package:legion/tool.dart";
 import "package:legion/utils.dart";
 
 import "package:path/path.dart" as pathlib;
 
 main(List<String> args) async {
+  await loadPlugins();
+
   Directory dir = new Directory("legion");
   Map<String, dynamic> state = await readJsonFile(
     ".state",

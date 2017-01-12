@@ -38,9 +38,18 @@ class BuildStageExecution {
   BuildStageExecution(this.stage, this.targets, this.extraArguments);
 }
 
-executeBuildStages(Directory directory, List<BuildStageExecution> executions) async {
+executeBuildStages(
+  Directory directory,
+  List<BuildStageExecution> executions,
+  {
+    onProjectLoaded(Project project)
+  }) async {
   var project = new Project(directory);
   await project.init();
+
+  if (onProjectLoaded != null) {
+    await onProjectLoaded(project);
+  }
 
   for (var execution in executions) {
     var cycle = new BuildCycle(

@@ -524,8 +524,8 @@ Future<dynamic> readGlobalConfigSetting(String key, [defaultValue]) async {
 
   var value = resolveConfigValue(_globalConfiguration, key);
 
-  if (value != null) {
-    return defaultValue;
+  if (value == null) {
+    value = defaultValue;
   }
   return value;
 }
