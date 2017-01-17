@@ -64,13 +64,25 @@ class GccToolchainProvider extends ToolchainProvider {
   }
 
   @override
-  Future<List<String>> listBasicTargets() async {
+  Future<List<String>> listFriendlyTargets() async {
     if (path == null) {
       return const <String>[];
     }
 
     var gcc = new GccTool(path);
     var targets = await gcc.getTargetNames(basic: true);
+
+    return targets;
+  }
+
+  @override
+  Future<List<String>> listSupportedTargets() async {
+    if (path == null) {
+      return const <String>[];
+    }
+
+    var gcc = new GccTool(path);
+    var targets = await gcc.getTargetNames();
 
     return targets;
   }

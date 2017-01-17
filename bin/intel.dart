@@ -4,6 +4,17 @@ import "package:args/args.dart";
 
 import "package:legion/tool.dart";
 
+class ToolchainSummary {
+  final ProviderDescription description;
+  final List<String> friendlyTargets;
+  final List<String> supportedTargets;
+
+  ToolchainSummary(
+    this.description,
+    this.friendlyTargets,
+    this.supportedTargets);
+}
+
 main(List<String> args) async {
   await loadPlugins();
 
@@ -18,14 +29,26 @@ main(List<String> args) async {
 
   try {
     var toolchains = await loadAllToolchains();
+    var infos = <ToolchainSummary>[];
+
+    for (var toolchain in toolchains) {
+      var summary = new ToolchainSummary(
+        await toolchain.describe(),
+        await toolchain.listFriendlyTargets(),
+        await toolchain.listSupportedTargets()
+      );
+
+      infos.add(summary);
+    }
+
     var format = opts["format"];
 
     if (format == "human") {
-      await printHumanOutput(toolchains);
+      await printHumanOutput(infos);
     } else if (format == "json") {
-      await printJsonOutput(toolchains);
+      await printJsonOutput(infos);
     } else {
-      await printRawOutput(toolchains);
+      await printRawOutput(infos);
     }
   } on LegionError catch (e) {
     reportErrorMessage(e.toString());
@@ -33,7 +56,7 @@ main(List<String> args) async {
   }
 }
 
-printHumanOutput(List<ToolchainProvider> toolchains) async {
+printHumanOutput(List<ToolchainSummary> toolchains) async {
   reportStatusMessage("Supported Builders");
   for (var provider in builderProviders) {
     var info = await provider.describe();
@@ -44,10 +67,10 @@ printHumanOutput(List<ToolchainProvider> toolchains) async {
 
   reportStatusMessage("Supported Toolchains");
 
-  for (var provider in toolchains) {
+  for (var toolchain in toolchains) {
     GlobalState.currentStatusLevel++;
-    var info = await provider.describe();
-    var targets = await provider.listBasicTargets();
+    var info = toolchain.description;
+    var targets = toolchain.friendlyTargets;
     if (targets.isEmpty) {
       reportStatusMessage("${info.description} (No Targets Available)");
     } else {
@@ -62,7 +85,7 @@ printHumanOutput(List<ToolchainProvider> toolchains) async {
   }
 }
 
-printJsonOutput(List<ToolchainProvider> toolchains) async {
+printJsonOutput(List<ToolchainSummary> toolchains) async {
   var json = {
     "builders": {},
     "toolchains": {}
@@ -74,27 +97,31 @@ printJsonOutput(List<ToolchainProvider> toolchains) async {
   }
 
   for (var toolchain in toolchains) {
-    var info = await toolchain.describe();
-    var data = info.encode();
-    data["targets"] = await toolchain.listBasicTargets();
-    json["toolchains"][info.id] = data;
+    var data = toolchain.description.encode();
+    data["friendlyTargets"] = toolchain.friendlyTargets;
+    data["supportedTargets"] = toolchain.supportedTargets;
+    json["toolchains"][toolchain.description.id] = data;
   }
 
   print(JSON.encode(json));
 }
 
-printRawOutput(List<ToolchainProvider> toolchains) async {
+printRawOutput(List<ToolchainSummary> toolchains) async {
   for (var builder in builderProviders) {
     var info = await builder.describe();
     print("builder::${info.id}::${info.type}::${info.description}");
   }
 
   for (var toolchain in toolchains) {
-    var info = await toolchain.describe();
+    var info = toolchain.description;
     print("toolchain::${info.id}::${info.type}::${info.description}");
 
-    for (var target in await toolchain.listBasicTargets()) {
+    for (var target in toolchain.friendlyTargets) {
       print("target::${info.id}::${target}");
+    }
+
+    for (var target in toolchain.supportedTargets) {
+      print("raw-target::${info.id}::${target}");
     }
   }
 }

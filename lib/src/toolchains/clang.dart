@@ -70,13 +70,24 @@ class ClangToolchainProvider extends ToolchainProvider {
   }
 
   @override
-  Future<List<String>> listBasicTargets() async {
+  Future<List<String>> listFriendlyTargets() async {
     if (path == null) {
       return const <String>[];
     }
 
     var clang = new ClangTool(path);
     var targets = await clang.getTargetNames(basic: true);
+    return targets;
+  }
+
+  @override
+  Future<List<String>> listSupportedTargets() async {
+    if (path == null) {
+      return const <String>[];
+    }
+
+    var clang = new ClangTool(path);
+    var targets = await clang.getTargetNames();
     return targets;
   }
 

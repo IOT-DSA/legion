@@ -1,7 +1,8 @@
 part of legion.api;
 
 abstract class ToolchainProvider implements Provider {
-  Future<List<String>> listBasicTargets();
+  Future<List<String>> listFriendlyTargets();
+  Future<List<String>> listSupportedTargets();
   Future<bool> isTargetSupported(String target, Configuration config);
   Future<Toolchain> getToolchain(String target, Configuration config);
 }

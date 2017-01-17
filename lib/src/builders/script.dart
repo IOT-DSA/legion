@@ -19,6 +19,19 @@ const List<String> buildScriptPossibilities = const <String>[
   "build"
 ];
 
+const List<String> configureScriptPossibilities = const <String>[
+  "configure.sh",
+  "tool/configure.sh",
+  "tool/configure",
+  "tools/configure.sh",
+  "tools/configure",
+  "script/configure.sh",
+  "script/configure",
+  "scripts/configure.sh",
+  "scripts/configure",
+  "configure"
+];
+
 class ScriptBuilder extends Builder {
   ScriptBuilder(Target target) : super(target);
 
@@ -26,18 +39,9 @@ class ScriptBuilder extends Builder {
   Future generate() async {
     await target.ensureCleanBuildDirectory();
 
-    var configureScriptFile = await target.project.getFileFromPossibilities([
-      "configure.sh",
-      "tool/configure.sh",
-      "tool/configure",
-      "tools/configure.sh",
-      "tools/configure",
-      "script/configure.sh",
-      "script/configure",
-      "scripts/configure.sh",
-      "scripts/configure",
-      "configure"
-    ]);
+    var configureScriptFile = await target.project.getFileFromPossibilities(
+      configureScriptPossibilities
+    );
 
     if (configureScriptFile == null || !(await configureScriptFile).exists()) {
       return;
@@ -78,7 +82,7 @@ class ScriptBuilder extends Builder {
       buildScriptPossibilities
     );
 
-    if (buildScriptFile == null || !(await buildScriptFile).exists()) {
+    if (buildScriptFile == null || !(await buildScriptFile.exists())) {
       reportWarningMessage("Build script file not found");
       return;
     }
@@ -95,6 +99,7 @@ class ScriptBuilder extends Builder {
     args.add("CC=${cc}");
     args.add("CXX=${cxx}");
     args.add("SYSTEM=${system}");
+    args.add("PROJECT=${target.project.directory.path}");
 
     for (var key in env.keys) {
       args.add("${key}=${escapeShellArgumentList(env[key])}");

@@ -78,14 +78,19 @@ class OsxCrossToolchainProvider extends ToolchainProvider {
 
   @override
   Future<bool> isTargetSupported(String target, Configuration config) async {
-    return (await listBasicTargets()).contains(target);
+    return (await listFriendlyTargets()).contains(target);
   }
 
   @override
-  Future<List<String>> listBasicTargets() async {
+  Future<List<String>> listFriendlyTargets() async {
     return <String>[
       "mac-x86",
       "mac-x64"
     ];
+  }
+
+  @override
+  Future<List<String>> listSupportedTargets() async {
+    return await listFriendlyTargets();
   }
 }

@@ -310,7 +310,12 @@ class CrossToolToolchainProvider extends ToolchainProvider {
   }
 
   @override
-  Future<List<String>> listBasicTargets() async {
-    return await crosstoolTargetMap.keys.toList();
+  Future<List<String>> listFriendlyTargets() async {
+    return crosstoolTargetMap.keys.toList();
+  }
+
+  @override
+  Future<List<String>> listSupportedTargets() async {
+    return await listFriendlyTargets();
   }
 }
