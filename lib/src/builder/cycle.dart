@@ -14,6 +14,8 @@ class BuildCycle {
         await _configure();
       } else if (stage == BuildStage.build) {
         await _build();
+      } else if (stage == BuildStage.assemble) {
+        await _assemble();
       } else {
         throw new LegionError("Unknown build stage ${stage}");
       }
@@ -106,6 +108,18 @@ class BuildCycle {
     }
   }
 
+  Future _assemble() async {
+    var steps = await getAssemblySteps();
+
+    for (var target in await getTargets().toList()) {
+      reportStatusMessage("Assembling target ${target.name}");
+      for (var step in steps) {
+        await step.perform(target);
+      }
+      reportStatusMessage("Assembled target ${target.name}");
+    }
+  }
+
   Future<ToolchainProvider> getToolchainProvider(String targetName) async {
     return await resolveToolchainProvider(targetName, project);
   }
@@ -118,5 +132,27 @@ class BuildCycle {
     }
 
     return null;
+  }
+
+  Future<List<AssemblyStep>> getAssemblySteps() async {
+    var assemblies = await project.getSubConfigurations("assembly");
+    var steps = <AssemblyStep>[];
+
+    for (var assembly in assemblies) {
+      AssemblyStep step;
+      for (var provider in assemblyProviders) {
+        if (await provider.claims(assembly)) {
+          step = await provider.create(assembly);
+        }
+      }
+
+      if (step == null) {
+        reportWarningMessage("Assembly step was not claimed");
+      } else {
+        steps.add(step);
+      }
+    }
+
+    return steps;
   }
 }

@@ -1,6 +1,6 @@
 name: legion
 description: Dead-Simple Cross Compilation
-version: 0.0.1
+version: 0.1.0
 dependencies:
   legit:
     git: https://github.com/DirectMyFile/legit.git
@@ -8,5 +8,6 @@ dependencies:
   dye: "^0.0.2"
   system_info: "^0.0.16"
   args: "^0.13.7"
+  mustache: "^0.2.5+1"
 executables:
   legion:

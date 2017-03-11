@@ -402,6 +402,27 @@ Future<dynamic> makeChoiceByFileExistence(Map<String, dynamic> files, {from}) as
   return files["_"];
 }
 
+Future<File> getFileFromPossibleExtensions(String basePath, List<String> extensions) async {
+  var file = new File(basePath);
+
+  if (await file.exists()) {
+    return file;
+  }
+
+  for (var ext in extensions) {
+    if (ext.startsWith(".")) {
+      ext = ext.substring(1);
+    }
+    file = new File("${basePath}.${ext}");
+
+    if (await file.exists()) {
+      return file;
+    }
+  }
+
+  return new File(basePath);
+}
+
 final RegExp _shellEscapeNeeded = new RegExp(r"[^A-Za-z0-9_\/:=-]");
 final RegExp _shellEscapeDupSingle = new RegExp(r"^(?:'')+");
 final RegExp _shellEscapeNonEscaped = new RegExp(r"\\'''");

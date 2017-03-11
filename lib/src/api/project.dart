@@ -89,4 +89,31 @@ class Project implements Configuration {
   Future<bool> hasFile(String path) async {
     return await getFile(path).exists();
   }
+
+  @override
+  Future<Configuration> getSubConfiguration(String key) async {
+    return new MapConfiguration(await getMapSetting(key));
+  }
+
+  @override
+  Future<List<Configuration>> getSubConfigurations(String key) async {
+    var list = await getSetting(key);
+
+    if (list is! List) {
+      return const [];
+    }
+
+    var maps = list.where((x) => x is Map);
+
+    return maps.map((x) {
+      return new MapConfiguration(x);
+    }).toList();
+  }
+
+  @override
+  Future<bool> hasStringSetting(String key) async {
+    var str = await getStringSetting(key, null);
+
+    return str != null;
+  }
 }

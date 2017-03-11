@@ -16,6 +16,8 @@ import "src/toolchains/gcc.dart" as Gcc;
 import "src/toolchains/clang.dart" as Clang;
 import "src/toolchains/osxcross.dart" as OsxCross;
 
+import "src/assemblies/copy_executable.dart" as CopyExecutable;
+
 part "src/builder/stage.dart";
 part "src/builder/cycle.dart";
 part "src/builder/toolchains.dart";
@@ -30,6 +32,10 @@ final List<BuilderProvider> builderProviders = <BuilderProvider>[
 final List<ToolchainProvider> toolchainProviders = <ToolchainProvider>[
   new OsxCross.OsxCrossToolchainProvider(),
   new CrossTool.CrossToolToolchainProvider()
+];
+
+final List<AssemblyStepProvider> assemblyProviders = <AssemblyStepProvider>[
+  new CopyExecutable.CopyExecutableAssemblyStepProvider()
 ];
 
 class BuildStageExecution {
@@ -89,6 +95,14 @@ Future<ToolchainProvider> resolveToolchainProvider(String targetName, [Configura
     var tname = targetName;
     if (targetName.startsWith("${info.id}:")) {
       tname = targetName.substring("${info.id}:".length);
+    }
+
+    if (targetName.startsWith("${info.id.replaceAll('/', '-')}:")) {
+      tname = targetName.substring("${info.id.replaceAll('/', '-')}:".length);
+    }
+
+    if (targetName.startsWith("${info.id.replaceAll('/', '-').substring(1)}:")) {
+      tname = targetName.substring("${info.id.replaceAll('/', '-').substring(1)}:".length);
     }
 
     if (await provider.isTargetSupported(tname, config)) {

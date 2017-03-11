@@ -1,73 +1,32 @@
 import "dart:io";
 
 import "package:legion/tool.dart";
-import "package:legion/utils.dart";
-
-import "package:path/path.dart" as pathlib;
 
 main(List<String> args) async {
   await loadPlugins();
 
-  Directory dir = new Directory("legion");
-  Map<String, dynamic> state = await readJsonFile(
-    ".state",
-    inside: dir,
-    defaultValue: null
-  );
+  var targets = args.takeWhile((arg) => arg != "--").toList();
+  var extraArguments = args.skip(targets.length).toList();
 
-  if (state == null) {
-    reportErrorMessage("No targets have been generated");
-    exit(1);
+  if (extraArguments.length >= 1 && extraArguments.first == "--") {
+    extraArguments = extraArguments.skip(1).toList();
   }
 
-  List<String> targets = state["targets"];
-  var distConfig = state["dists"];
-  Map<String, String> dists = {};
+  var executions = [
+    new BuildStageExecution(
+      BuildStage.assemble,
+      targets,
+      extraArguments
+    )
+  ];
 
-  if (distConfig is List) {
-    for (var e in distConfig) {
-      dists[e.toString()] = "{TARGET}-${e.toString()}";
-    }
-  } else if (distConfig is Map) {
-    dists = distConfig;
-  }
-
-  if (targets == null) {
-    reportErrorMessage("No distributions configured");
-    exit(1);
-  }
-
-  var distDir = new Directory("dists");
-  if (await distDir.exists()) {
-    await distDir.create(recursive: true);
-  }
-
-  for (String target in targets) {
-    reportStatusMessage("Assembling target ${target}");
-
-    for (var source in dists.keys) {
-      var file = new File(pathlib.join("legion", target, source));
-      var targetBase = dists[source];
-      targetBase = targetBase.replaceAll("{TARGET}", target);
-      targetBase = targetBase.replaceAll(
-        "{TARGET_UNDERSCORE}",
-        target.replaceAll("-", "_")
-      );
-      var targetPath = pathlib.join("dists", targetBase);
-      var targetFile = new File(targetPath);
-      if (await file.exists()) {
-        if (await targetFile.exists()) {
-          await targetFile.delete(recursive: true);
-        }
-        await targetFile.parent.create(recursive: true);
-        await file.copy(targetPath);
-      } else {
-        reportWarningMessage(
-          "Distributable '${source}' not found for target ${target}"
-        );
+  await executeBuildStages(
+    Directory.current,
+    executions,
+    onProjectLoaded: (Project project) async {
+      if (targets.isEmpty) {
+        targets.addAll(await project.getStringListSetting("defaultTargets"));
       }
     }
-
-    reportStatusMessage("Assembled target ${target}");
-  }
+  );
 }

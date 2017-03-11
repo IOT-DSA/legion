@@ -14,3 +14,4 @@ part "src/api/target.dart";
 part "src/api/config.dart";
 part "src/api/tool.dart";
 part "src/api/common.dart";
+part "src/api/assembly.dart";
