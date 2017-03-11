@@ -23,7 +23,7 @@ Future writePluginStub(String content) async {
   await file.writeAsString(content.trimLeft());
 }
 
-Future attemptTotLoadPluginStub() async {
+Future attemptToLoadPluginStub() async {
   var file = new File(
     Platform.isWindows ?
     _legionWindowsPluginsPath :

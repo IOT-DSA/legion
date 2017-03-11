@@ -55,5 +55,5 @@ Future loadPlugins() async {
   stub.writeln("}");
 
   await PluginLoader.writePluginStub(stub.toString());
-  await PluginLoader.attemptTotLoadPluginStub();
+  await PluginLoader.attemptToLoadPluginStub();
 }
